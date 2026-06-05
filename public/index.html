@@ -107,8 +107,10 @@
     .cur-tag{position:absolute;right:12px;top:12px;background:var(--gold);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px}
     /* PROFILE */
     .pr-hero{background:linear-gradient(135deg,var(--red-dark),var(--red));color:#fff;padding:50px 24px 30px;text-align:center}
-    .pr-av{width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 14px;border:3px solid rgba(255,255,255,.4);overflow:hidden}
+    .pr-av{width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto;border:3px solid rgba(255,255,255,.4);overflow:hidden}
     .pr-av img{width:100%;height:100%;object-fit:cover}
+    .pr-av-wrap{position:relative;width:80px;margin:0 auto 14px}
+    .pr-cam{position:absolute;bottom:0;right:0;background:var(--red);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #fff;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,.2)}
     .pr-hero h2{font-size:22px;font-weight:800}.pr-hero p{font-size:14px;opacity:.85;margin-top:4px}
     .pr-stats{display:flex;margin-top:20px}
     .psi{flex:1;text-align:center;border-right:1px solid rgba(255,255,255,.2);padding:0 8px}.psi:last-child{border-right:none}
@@ -163,6 +165,11 @@
     <div class="err-msg" id="signup-err"></div>
 
     <div class="sec-label">Personal Information</div>
+    <div class="fg" style="display:flex;flex-direction:column;align-items:center;margin-bottom:20px">
+      <div id="signup-av-preview" style="width:80px;height:80px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:10px;overflow:hidden;border:2px solid var(--red-light)">👤</div>
+      <label for="r-image" style="color:var(--red);font-size:13px;font-weight:600;cursor:pointer">Upload Profile Image</label>
+      <input type="file" id="r-image" accept="image/*" style="display:none" onchange="previewImage(this, 'signup-av-preview')"/>
+    </div>
     <div class="fg"><label>Full Name</label><input type="text" id="r-name" placeholder="Enter your full name"/></div>
     <div class="fg"><label>Phone Number</label><input type="tel" id="r-phone" placeholder="+234 800 000 0000"/></div>
     <div class="fg"><label>Email Address <span style="font-weight:400;color:var(--muted)">(Optional)</span></label><input type="email" id="r-email" placeholder="you@email.com"/></div>
@@ -227,7 +234,7 @@
     <div class="topbar">
       <div class="topbar-row">
         <div><div class="u-greet">Welcome back 👋</div><div class="u-name" id="d-name">—</div></div>
-        <div class="avatar"><img src="logo.jpg"/></div>
+        <div class="avatar"><img src="logo.jpg" id="d-img"/></div>
       </div>
       <div class="lvl-badge" id="d-badge">⚡ Level 1</div>
     </div>
@@ -318,7 +325,11 @@
   <!-- PROFILE -->
   <div id="tab-profile" class="tab-panel" style="display:none">
     <div class="pr-hero">
-      <div class="pr-av"><img src="logo.jpg"/></div>
+      <div class="pr-av-wrap">
+        <div class="pr-av"><img src="logo.jpg" id="pr-img"/></div>
+        <label for="pr-file-input" class="pr-cam">📸</label>
+        <input type="file" id="pr-file-input" style="display:none" accept="image/*" onchange="uploadProfileImage(this)"/>
+      </div>
       <h2 id="pr-name">—</h2>
       <p id="pr-sub">—</p>
       <div class="pr-stats">
@@ -457,6 +468,43 @@ async function onLGAChange() {
   wardSel.disabled = false;
 }
 
+function previewImage(input, previewId) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const p = document.getElementById(previewId);
+      p.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover"/>`;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+async function uploadProfileImage(input) {
+  if (!input.files || !input.files[0]) return;
+  const formData = new FormData();
+  formData.append('profile_image', input.files[0]);
+  showToast('Updating profile photo...');
+  try {
+    const res = await fetch(API + '/api/profile/image', {
+      method: 'POST',
+      headers: {'Authorization': 'Bearer ' + token},
+      body: formData
+    });
+    const data = await res.json();
+    if (res.ok) {
+      currentUser.profile_image = data.profile_image;
+      saveSession(token, currentUser);
+      document.getElementById('pr-img').src = API + data.profile_image;
+      if (document.getElementById('dash-av')) document.getElementById('dash-av').innerHTML = `<img src="${API + data.profile_image}"/>`;
+      showToast('Profile photo updated! 📸');
+    } else {
+      showToast('Failed to update photo: ' + data.error);
+    }
+  } catch(e) {
+    showToast('Upload failed.');
+  }
+}
+
 // ── REGISTER ──────────────────────────────────────────────────────────────────
 async function doSignup() {
   const btn = document.getElementById('signup-btn');
@@ -484,11 +532,23 @@ async function doSignup() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Creating account...';
 
+  const formData = new FormData();
+  formData.append('full_name', name);
+  formData.append('phone', phone);
+  formData.append('email', email);
+  formData.append('state', state);
+  formData.append('lga', lga);
+  formData.append('ward', ward);
+  formData.append('pvc', pvc);
+  formData.append('referred_by', ref || '');
+  formData.append('password', pass);
+  const imgFile = document.getElementById('r-image').files[0];
+  if (imgFile) formData.append('profile_image', imgFile);
+
   try {
     const res = await fetch(API + '/api/register', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({full_name:name,phone,email,state,lga,ward,pvc,referred_by:ref||null,password:pass})
+      body: formData
     });
     const data = await res.json();
     if (!res.ok) { showErr('signup-err', data.error); btn.disabled=false; btn.textContent='Create Account'; return; }
@@ -551,6 +611,11 @@ function renderDashboard(m, activity) {
   // Names
   const fname = (m.full_name||'').split(' ')[0];
   document.getElementById('d-name').textContent = fname;
+  if (m.profile_image) {
+    document.getElementById('d-img').src = API + m.profile_image;
+  } else {
+    document.getElementById('d-img').src = 'logo.jpg';
+  }
   document.getElementById('d-badge').textContent = lvl.icon + ' ' + lvl.n + ' · Level ' + m.level;
 
   // Stats
@@ -584,6 +649,11 @@ function renderDashboard(m, activity) {
   document.getElementById('rk-national').textContent = '#' + (m.national_rank||'—');
 
   // Profile
+  if (m.profile_image) {
+    document.getElementById('pr-img').src = API + m.profile_image;
+  } else {
+    document.getElementById('pr-img').src = 'logo.jpg';
+  }
   document.getElementById('pr-name').textContent = m.full_name || '—';
   document.getElementById('pr-sub').textContent = lvl.icon + ' ' + lvl.n + ' · Level ' + m.level + (m.state ? ' · ' + m.state : '') + (m.lga ? ' · ' + m.lga : '');
   document.getElementById('d-name').textContent = m.full_name || '—';
