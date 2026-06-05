@@ -135,7 +135,7 @@ app.post('/api/register', async (req, res) => {
       await pool.query('UPDATE members SET kpower=kpower+50 WHERE referral_code=$1',[referred_by.toUpperCase()]);
     const m = r.rows[0];
     const token = jwt.sign({id:m.id,referral_code:m.referral_code}, JWT_SECRET, {expiresIn:'30d'});
-    res.json({success:true,token,member:{id:m.id,full_name:m.full_name,referral_code:m.referral_code,level:1,level_name:'Infant',kpower:0,state:m.state,lga:m.lga,ward:m.ward,referrals:0}});
+    res.json({success:true,token,member:{id:m.id,full_name:m.full_name,referral_code:m.referral_code,level:1,level_name:'Infant',kpower:0,state:m.state,lga:m.lga,ward:m.ward,referrals:0,rank_state:1,rank_national:1}});
   } catch(e) {
     console.error('Register error:', e);
     res.status(500).json({error:'Registration failed. Please try again.'});
@@ -154,7 +154,9 @@ app.post('/api/login', async (req, res) => {
     const refs = parseInt((await pool.query('SELECT COUNT(*) FROM members WHERE referred_by=$1',[m.referral_code])).rows[0].count);
     const lvl = getLevel(refs);
     const token = jwt.sign({id:m.id,referral_code:m.referral_code}, JWT_SECRET, {expiresIn:'30d'});
-    res.json({success:true,token,member:{id:m.id,full_name:m.full_name,phone:m.phone,referral_code:m.referral_code,level:lvl.level,level_name:lvl.name,kpower:m.kpower,state:m.state,lga:m.lga,ward:m.ward,referrals:refs}});
+    const stateRank = parseInt((await pool.query('SELECT COUNT(*)+1 as r FROM members m2 WHERE m2.state=$1 AND (SELECT COUNT(*) FROM members WHERE referred_by=m2.referral_code)>(SELECT COUNT(*) FROM members WHERE referred_by=$2) AND m2.id!=$3',[m.state,m.referral_code,m.id])).rows[0].r);
+    const natRank = parseInt((await pool.query('SELECT COUNT(*)+1 as r FROM members m2 WHERE (SELECT COUNT(*) FROM members WHERE referred_by=m2.referral_code)>(SELECT COUNT(*) FROM members WHERE referred_by=$1) AND m2.id!=$2',[m.referral_code,m.id])).rows[0].r);
+    res.json({success:true,token,member:{id:m.id,full_name:m.full_name,phone:m.phone,referral_code:m.referral_code,level:lvl.level,level_name:lvl.name,kpower:m.kpower,state:m.state,lga:m.lga,ward:m.ward,referrals:refs,rank_state:stateRank,rank_national:natRank}});
   } catch(e) { res.status(500).json({error:'Login failed.'}); }
 });
 
@@ -179,9 +181,22 @@ app.get('/api/dashboard', auth, async (req, res) => {
 app.get('/api/leaderboard', async (req, res) => {
   try {
     const {state} = req.query;
-    const q = 'SELECT m.full_name,m.state,COUNT(r.id) as referrals FROM members m LEFT JOIN members r ON r.referred_by=m.referral_code ' + (state?'WHERE m.state=$1 ':'') + 'GROUP BY m.id ORDER BY referrals DESC LIMIT 20';
+    const q = 'SELECT m.full_name,m.state,m.lga,m.kpower,m.level,COUNT(r.id) as referrals FROM members m LEFT JOIN members r ON r.referred_by=m.referral_code ' + (state?'WHERE m.state=$1 ':'') + 'GROUP BY m.id ORDER BY referrals DESC LIMIT 20';
     const result = state ? await pool.query(q,[state]) : await pool.query(q);
-    res.json(result.rows);
+    const rows = result.rows.map(row => {
+      const refs = parseInt(row.referrals);
+      const lvl = getLevel(refs);
+      return {
+        full_name: row.full_name,
+        state: row.state,
+        lga: row.lga,
+        referrals: refs,
+        level: lvl.level,
+        level_name: lvl.name,
+        kpower: row.kpower + (refs * 50)
+      };
+    });
+    res.json(rows);
   } catch(e) { res.status(500).json({error:'Leaderboard failed.'}); }
 });
 
