@@ -38,4 +38,4 @@ Political mobilization platform for the Kwankwasiyya movement.
 - `GET /api/dashboard` — Member dashboard (auth required)
 - `GET /api/leaderboard` — Top members (optional ?state= filter)
 - `GET /api/stats` — Total members & states count
-- `POST /api/profile/image` — Upload profile image (auth required)
+ - `POST /api/profile-photo` — Upload profile image (auth required)
