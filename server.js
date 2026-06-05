@@ -198,7 +198,7 @@ app.get('/api/dashboard', auth, async (req, res) => {
   } catch(e) { res.status(500).json({error:'Dashboard failed.'}); }
 });
 
-app.post('/api/profile/image', auth, upload.single('profile_image'), async (req, res) => {
+app.post('/api/profile-photo', auth, upload.single('profile_image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({error: 'No image uploaded'});
     const profile_image = '/uploads/' + req.file.filename;
