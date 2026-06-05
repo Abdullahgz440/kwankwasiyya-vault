@@ -674,8 +674,7 @@ async function loadLeaderboard() {
     document.getElementById('rank-list').innerHTML = data.length === 0
       ? '<div style="text-align:center;padding:30px;color:var(--muted)">No members yet in this region</div>'
       : data.map((r,i) => {
-          const lvl = calcLevel(r.kpower || 0);
-          return '<div class="rk-item"><div class="rk-pos">'+(i<3?medals[i]:'#'+(i+1))+'</div><div class="rk-av"><img src="logo.jpg"/></div><div class="rk-info"><div class="rn">'+escHtml(r.full_name)+'</div><div class="rs">'+escHtml(r.state) + (r.lga?' · '+escHtml(r.lga):'') + ' • Level '+lvl.level+'</div></div><div class="rk-cnt"><div class="rc">'+Number(r.referrals).toLocaleString()+'</div><div class="rl">referrals</div></div></div>';
+          return '<div class="rk-item"><div class="rk-pos">'+(i<3?medals[i]:'#'+(i+1))+'</div><div class="rk-av"><img src="logo.jpg"/></div><div class="rk-info"><div class="rn">'+escHtml(r.full_name)+'</div><div class="rs">'+escHtml(r.state) + (r.lga?' · '+escHtml(r.lga):'') + ' • Level '+r.level+'</div></div><div class="rk-cnt"><div class="rc">'+Number(r.referrals).toLocaleString()+'</div><div class="rl">referrals</div></div></div>';
         }).join('');
   } catch(e) {
     document.getElementById('rank-list').innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">Failed to load leaderboard</div>';
