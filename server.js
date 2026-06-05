@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const multer = require('multer');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -10,6 +11,17 @@ const https = require('https');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'kwankwasiyya-secret-2025';
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads/')
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname))
+  }
+});
+const upload = multer({ storage: storage });
 
 let NIGERIA = {};
 
@@ -67,9 +79,16 @@ async function initDB() {
       password_hash VARCHAR(200) NOT NULL,
       level INT DEFAULT 1,
       kpower INT DEFAULT 0,
+      profile_image VARCHAR(255),
       created_at TIMESTAMP DEFAULT NOW()
     );
   `);
+  // Ensure uploads directory exists
+  const fs = require('fs');
+  const dir = './public/uploads';
+  if (!fs.existsSync(dir)){
+    fs.mkdirSync(dir, { recursive: true });
+  }
   console.log('Database ready');
 }
 
@@ -107,9 +126,10 @@ app.get('/api/wards/:state/:lga', (req, res) => {
   res.json(l.slice().sort());
 });
 
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', upload.single('profile_image'), async (req, res) => {
   try {
     const {full_name,phone,email,state,lga,ward,pvc,referred_by,password} = req.body;
+    const profile_image = req.file ? '/uploads/' + req.file.filename : null;
     if (!full_name||!phone||!state||!lga||!ward||!pvc||!password)
       return res.status(400).json({error:'All required fields must be filled'});
     if (password.length < 6)
@@ -128,14 +148,14 @@ app.post('/api/register', async (req, res) => {
     while ((await pool.query('SELECT id FROM members WHERE referral_code=$1',[referral_code])).rows.length)
       referral_code = generateCode(full_name);
     const r = await pool.query(
-      'INSERT INTO members (full_name,phone,email,state,lga,ward,pvc,referral_code,referred_by,password_hash) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id,full_name,referral_code,state,lga,ward',
-      [full_name,phone,email||null,state,lga,ward,pvcUp,referral_code,referred_by?referred_by.toUpperCase():null,password_hash]
+      'INSERT INTO members (full_name,phone,email,state,lga,ward,pvc,referral_code,referred_by,password_hash,profile_image) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id,full_name,referral_code,state,lga,ward,profile_image',
+      [full_name,phone,email||null,state,lga,ward,pvcUp,referral_code,referred_by?referred_by.toUpperCase():null,password_hash,profile_image]
     );
     if (referred_by)
       await pool.query('UPDATE members SET kpower=kpower+50 WHERE referral_code=$1',[referred_by.toUpperCase()]);
     const m = r.rows[0];
     const token = jwt.sign({id:m.id,referral_code:m.referral_code}, JWT_SECRET, {expiresIn:'30d'});
-    res.json({success:true,token,member:{id:m.id,full_name:m.full_name,referral_code:m.referral_code,level:1,level_name:'Infant',kpower:0,state:m.state,lga:m.lga,ward:m.ward,referrals:0,rank_state:1,rank_national:1}});
+    res.json({success:true,token,member:{id:m.id,full_name:m.full_name,referral_code:m.referral_code,level:1,level_name:'Infant',kpower:0,state:m.state,lga:m.lga,ward:m.ward,referrals:0,rank_state:1,rank_national:1,profile_image:m.profile_image}});
   } catch(e) {
     console.error('Register error:', e);
     res.status(500).json({error:'Registration failed. Please try again.'});
@@ -156,7 +176,7 @@ app.post('/api/login', async (req, res) => {
     const token = jwt.sign({id:m.id,referral_code:m.referral_code}, JWT_SECRET, {expiresIn:'30d'});
     const stateRank = parseInt((await pool.query('SELECT COUNT(*)+1 as r FROM members m2 WHERE m2.state=$1 AND (SELECT COUNT(*) FROM members WHERE referred_by=m2.referral_code)>(SELECT COUNT(*) FROM members WHERE referred_by=$2) AND m2.id!=$3',[m.state,m.referral_code,m.id])).rows[0].r);
     const natRank = parseInt((await pool.query('SELECT COUNT(*)+1 as r FROM members m2 WHERE (SELECT COUNT(*) FROM members WHERE referred_by=m2.referral_code)>(SELECT COUNT(*) FROM members WHERE referred_by=$1) AND m2.id!=$2',[m.referral_code,m.id])).rows[0].r);
-    res.json({success:true,token,member:{id:m.id,full_name:m.full_name,phone:m.phone,referral_code:m.referral_code,level:lvl.level,level_name:lvl.name,kpower:m.kpower,state:m.state,lga:m.lga,ward:m.ward,referrals:refs,rank_state:stateRank,rank_national:natRank}});
+    res.json({success:true,token,member:{id:m.id,full_name:m.full_name,phone:m.phone,referral_code:m.referral_code,level:lvl.level,level_name:lvl.name,kpower:m.kpower,state:m.state,lga:m.lga,ward:m.ward,referrals:refs,rank_state:stateRank,rank_national:natRank,profile_image:m.profile_image}});
   } catch(e) { res.status(500).json({error:'Login failed.'}); }
 });
 
@@ -174,8 +194,19 @@ app.get('/api/dashboard', auth, async (req, res) => {
     const natRank = parseInt((await pool.query('SELECT COUNT(*)+1 as r FROM members m2 WHERE (SELECT COUNT(*) FROM members WHERE referred_by=m2.referral_code)>(SELECT COUNT(*) FROM members WHERE referred_by=$1) AND m2.id!=$2',[m.referral_code,m.id])).rows[0].r);
     const activity = (await pool.query('SELECT full_name,created_at FROM members WHERE referred_by=$1 ORDER BY created_at DESC LIMIT 5',[m.referral_code])).rows;
     const lvlNames = ['','Infant','Beginner','Builder','Mobilizer','Influencer','Coordinator','Strategist','Leader','Champion','Legend'];
-    res.json({member:{full_name:m.full_name,referral_code:m.referral_code,state:m.state,lga:m.lga,ward:m.ward,level:lvl.level,level_name:lvl.name,kpower:m.kpower+(refs*50),referrals:refs,state_rank:stateRank,national_rank:natRank,progress_current:refs-curT,progress_total:nextT-curT,next_level_name:lvlNames[lvl.level+1]||'Legend'},activity:activity.map(a=>({name:a.full_name,time:a.created_at}))});
+    res.json({member:{full_name:m.full_name,referral_code:m.referral_code,state:m.state,lga:m.lga,ward:m.ward,level:lvl.level,level_name:lvl.name,kpower:m.kpower+(refs*50),referrals:refs,state_rank:stateRank,national_rank:natRank,progress_current:refs-curT,progress_total:nextT-curT,next_level_name:lvlNames[lvl.level+1]||'Legend',profile_image:m.profile_image},activity:activity.map(a=>({name:a.full_name,time:a.created_at}))});
   } catch(e) { res.status(500).json({error:'Dashboard failed.'}); }
+});
+
+app.post('/api/profile/image', auth, upload.single('profile_image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({error: 'No image uploaded'});
+    const profile_image = '/uploads/' + req.file.filename;
+    await pool.query('UPDATE members SET profile_image=$1 WHERE id=$2', [profile_image, req.user.id]);
+    res.json({success: true, profile_image});
+  } catch(e) {
+    res.status(500).json({error: 'Failed to update profile image'});
+  }
 });
 
 app.get('/api/leaderboard', async (req, res) => {
