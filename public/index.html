@@ -486,7 +486,7 @@ async function uploadProfileImage(input) {
   formData.append('profile_image', input.files[0]);
   showToast('Updating profile photo...');
   try {
-    const res = await fetch(API + '/api/profile/image', {
+    const res = await fetch(API + '/api/profile-photo', {
       method: 'POST',
       headers: {'Authorization': 'Bearer ' + token},
       body: formData
