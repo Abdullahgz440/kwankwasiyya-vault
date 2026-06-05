@@ -296,14 +296,15 @@
   <div id="tab-ranks" class="tab-panel" style="display:none">
     <div class="rk-top"><h2>🏆 Leaderboard</h2><p>Top members nationwide</p></div>
     <div class="my-rank"><div><h4>Your National Rank</h4><p>Keep inviting to climb higher!</p></div><div class="mrn" id="rk-national">#—</div></div>
-    <div class="filters">
-      <div class="flt active" onclick="loadLeaderboard(null,this)">National</div>
-      <div class="flt" onclick="loadLeaderboard('Kano',this)">Kano</div>
-      <div class="flt" onclick="loadLeaderboard('Lagos',this)">Lagos</div>
-      <div class="flt" onclick="loadLeaderboard('Abuja (FCT)',this)">Abuja</div>
-      <div class="flt" onclick="loadLeaderboard('Kaduna',this)">Kaduna</div>
-      <div class="flt" onclick="loadLeaderboard('Katsina',this)">Katsina</div>
+    
+    <div class="filters-container" style="padding:10px 16px;background:#fff;border-bottom:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+         <div class="fg" style="margin-bottom:0"><select id="rk-state" style="padding:8px;font-size:13px" onchange="onRkStateChange()"><option value="">All States</option></select></div>
+         <div class="fg" style="margin-bottom:0"><select id="rk-lga" style="padding:8px;font-size:13px" disabled onchange="onRkLGAChange()"><option value="">All LGAs</option></select></div>
+      </div>
+      <div class="fg" style="margin-bottom:0"><select id="rk-ward" style="padding:8px;font-size:13px" disabled onchange="onRkWardChange()"><option value="">All Wards</option></select></div>
     </div>
+
     <div id="rank-list" style="padding:0 0 80px"></div>
   </div>
 
@@ -387,6 +388,7 @@ const LEVELS = [
 window.onload = function() {
   loadStats();
   loadStates();
+  loadRkStates();
   buildLevels();
   const token = localStorage.getItem('kv_token');
   if (token) {
@@ -608,12 +610,64 @@ function renderDashboard(m, activity) {
 }
 
 // ── LEADERBOARD ────────────────────────────────────────────────────────────────
-async function loadLeaderboard(state, el) {
-  if (el) {
-    document.querySelectorAll('.flt').forEach(f=>f.classList.remove('active'));
-    el.classList.add('active');
-  }
-  const url = state ? API+'/api/leaderboard?state='+encodeURIComponent(state) : API+'/api/leaderboard';
+async function onRkStateChange() {
+  const state = document.getElementById('rk-state').value;
+  const lgaSel = document.getElementById('rk-lga');
+  const wardSel = document.getElementById('rk-ward');
+  lgaSel.innerHTML = '<option value="">All LGAs</option>';
+  wardSel.innerHTML = '<option value="">All Wards</option>';
+  wardSel.disabled = true;
+  if (!state) { lgaSel.disabled = true; loadLeaderboard(); return; }
+  const lgas = await fetch(API + '/api/lgas/' + encodeURIComponent(state)).then(r=>r.json());
+  lgas.forEach(l => {
+    const o = document.createElement('option');
+    o.value = l; o.textContent = l;
+    lgaSel.appendChild(o);
+  });
+  lgaSel.disabled = false;
+  loadLeaderboard();
+}
+
+async function onRkLGAChange() {
+  const state = document.getElementById('rk-state').value;
+  const lga = document.getElementById('rk-lga').value;
+  const wardSel = document.getElementById('rk-ward');
+  wardSel.innerHTML = '<option value="">All Wards</option>';
+  if (!lga) { wardSel.disabled = true; loadLeaderboard(); return; }
+  const wards = await fetch(API + '/api/wards/' + encodeURIComponent(state) + '/' + encodeURIComponent(lga)).then(r=>r.json());
+  wards.forEach(w => {
+    const o = document.createElement('option');
+    o.value = w; o.textContent = w;
+    wardSel.appendChild(o);
+  });
+  wardSel.disabled = false;
+  loadLeaderboard();
+}
+
+function onRkWardChange() {
+  loadLeaderboard();
+}
+
+async function loadRkStates() {
+  const stateSel = document.getElementById('rk-state');
+  const states = await fetch(API + '/api/states').then(r=>r.json());
+  states.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    stateSel.appendChild(o);
+  });
+}
+
+async function loadLeaderboard() {
+  const state = document.getElementById('rk-state').value;
+  const lga = document.getElementById('rk-lga').value;
+  const ward = document.getElementById('rk-ward').value;
+
+  let url = API + '/api/leaderboard?';
+  if (state) url += 'state=' + encodeURIComponent(state) + '&';
+  if (lga) url += 'lga=' + encodeURIComponent(lga) + '&';
+  if (ward) url += 'ward=' + encodeURIComponent(ward);
+
   try {
     const data = await fetch(url).then(r=>r.json());
     const medals = ['🥇','🥈','🥉'];
@@ -621,7 +675,7 @@ async function loadLeaderboard(state, el) {
       ? '<div style="text-align:center;padding:30px;color:var(--muted)">No members yet in this region</div>'
       : data.map((r,i) => {
           const lvl = calcLevel(r.kpower || 0);
-          return '<div class="rk-item"><div class="rk-pos">'+(i<3?medals[i]:'#'+(i+1))+'</div><div class="rk-av"><img src="logo.jpg"/></div><div class="rk-info"><div class="rn">'+escHtml(r.full_name)+'</div><div class="rs">'+escHtml(r.state)+' State • Level '+lvl.level+'</div></div><div class="rk-cnt"><div class="rc">'+Number(r.referrals).toLocaleString()+'</div><div class="rl">referrals</div></div></div>';
+          return '<div class="rk-item"><div class="rk-pos">'+(i<3?medals[i]:'#'+(i+1))+'</div><div class="rk-av"><img src="logo.jpg"/></div><div class="rk-info"><div class="rn">'+escHtml(r.full_name)+'</div><div class="rs">'+escHtml(r.state) + (r.lga?' · '+escHtml(r.lga):'') + ' • Level '+lvl.level+'</div></div><div class="rk-cnt"><div class="rc">'+Number(r.referrals).toLocaleString()+'</div><div class="rl">referrals</div></div></div>';
         }).join('');
   } catch(e) {
     document.getElementById('rank-list').innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">Failed to load leaderboard</div>';
@@ -678,7 +732,7 @@ function switchTab(tab) {
   document.getElementById('tab-'+tab).style.display='block';
   document.getElementById('nav-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  if (tab==='ranks') loadLeaderboard(null, document.querySelector('.flt.active'));
+  if (tab==='ranks') loadLeaderboard();
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
