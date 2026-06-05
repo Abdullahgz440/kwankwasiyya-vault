@@ -180,9 +180,17 @@ app.get('/api/dashboard', auth, async (req, res) => {
 
 app.get('/api/leaderboard', async (req, res) => {
   try {
-    const {state} = req.query;
-    const q = 'SELECT m.full_name,m.state,m.lga,m.kpower,m.level,COUNT(r.id) as referrals FROM members m LEFT JOIN members r ON r.referred_by=m.referral_code ' + (state?'WHERE m.state=$1 ':'') + 'GROUP BY m.id ORDER BY referrals DESC LIMIT 20';
-    const result = state ? await pool.query(q,[state]) : await pool.query(q);
+    const {state, lga, ward} = req.query;
+    let where = [];
+    let params = [];
+    if (state) { params.push(state); where.push(`m.state=$${params.length}`); }
+    if (lga) { params.push(lga); where.push(`m.lga=$${params.length}`); }
+    if (ward) { params.push(ward); where.push(`m.ward=$${params.length}`); }
+    
+    const whereStr = where.length ? 'WHERE ' + where.join(' AND ') + ' ' : '';
+    const q = 'SELECT m.full_name,m.state,m.lga,m.kpower,m.level,COUNT(r.id) as referrals FROM members m LEFT JOIN members r ON r.referred_by=m.referral_code ' + whereStr + 'GROUP BY m.id ORDER BY referrals DESC LIMIT 20';
+    
+    const result = await pool.query(q, params);
     const rows = result.rows.map(row => {
       const refs = parseInt(row.referrals);
       const lvl = getLevel(refs);
