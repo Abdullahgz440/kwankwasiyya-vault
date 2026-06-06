@@ -350,15 +350,15 @@
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:16px">
+      <div class="card" style="margin-bottom:16px;cursor:pointer" onclick="openFounderBio()">
         <div class="card-title">About the Founder</div>
         <div style="display:flex;gap:12px;align-items:flex-start">
           <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;flex-shrink:0">
             <img src="founder.jpg" style="width:100%;height:100%;object-fit:cover"/>
           </div>
           <div style="flex:1">
-            <h4 style="margin-bottom:4px;font-size:15px">Sen. Rabiu Musa Kwankwaso</h4>
-            <p style="font-size:13px;color:var(--muted);line-height:1.5">The founder and national leader of the Kwankwasiyya Movement.</p>
+            <h4 style="margin-bottom:4px;font-size:15px">Comr Abdullahi Ghazali</h4>
+            <p style="font-size:13px;color:var(--muted);line-height:1.5">A Kwankwasiyya Loyalist, Philanthropist, Session Communications Professional and a Banker</p>
           </div>
         </div>
       </div>
@@ -909,6 +909,44 @@ async function shareIdCard() {
 }
 
 buildLevels();
+
+function openFounderBio() {
+  const overlay = document.createElement('div');
+  overlay.id = 'founder-bio-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px';
+  overlay.innerHTML = `
+    <div style="max-width:370px;width:100%;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.18)">
+      <div style="background:linear-gradient(180deg,#7f1d1d,#dc2626);padding:20px;color:#fff;text-align:center">
+        <div style="width:100px;height:100px;border-radius:50%;border:3px solid #fff;margin:0 auto 12px;overflow:hidden;background:#fff">
+          <img src="founder.jpg" style="width:100%;height:100%;object-fit:cover"/>
+        </div>
+        <h2 style="font-size:22px;font-weight:900">Comr Abdullahi Ghazali</h2>
+        <p style="font-size:14px;opacity:.9">A Kwankwasiyya Loyalist, Philanthropist, Session Communications Professional and a Banker</p>
+      </div>
+      <div style="padding:20px;color:var(--text)">
+        <h4 style="margin-bottom:8px;font-size:15px">Full Biography</h4>
+        <p style="font-size:13px;line-height:1.6;color:#444;margin-bottom:16px">
+          Abdullahi Ghazali is a dedicated Kwankwasiyya Loyalist and Philanthropist, as well as a seasoned Communications Professional and Banker. He holds an MSc in Communication Studies (Development Communication) and a BSc in Linguistics, both from the prestigious Bayero University Kano. With over 6 years of professional experience in Technology, AI, and Digital Transformation communications, he has served as the Founder & Communications Advisor at ClearLayer and Communications Coordinator at LocalizeHau Language Services Ltd. His work focuses on storytelling, media relations, and corporate communications, bridging the gap between technical innovation and community impact.
+        </p>
+        <div style="font-size:14px;line-height:1.8">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:16px">📧</span>
+            <a href="mailto:abdullahgz440@gmail.com" style="color:var(--red);text-decoration:none;font-weight:600">abdullahgz440@gmail.com</a>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <span style="font-size:16px">📞</span>
+            <a href="tel:08167222580" style="color:var(--red);text-decoration:none;font-weight:600">08167222580</a>
+          </div>
+        </div>
+        <button onclick="closeFounderBio()" style="width:100%;margin-top:20px;background:var(--red);color:#fff;border:none;padding:12px;border-radius:12px;font-weight:700;cursor:pointer">Close</button>
+      </div>
+    </div>
+  `;
+  overlay.onclick = closeFounderBio;
+  overlay.querySelector('div').onclick = e => e.stopPropagation();
+  document.body.appendChild(overlay);
+}
+function closeFounderBio() { document.getElementById('founder-bio-modal')?.remove(); }
 </script>
 </body>
 </html>
