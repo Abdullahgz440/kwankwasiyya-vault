@@ -215,6 +215,16 @@ app.post('/api/profile-photo', auth, upload.single('profile_image'), async (req,
   }
 });
 
+app.get('/api/export-members', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT id, full_name, phone, email, state, lga, ward, pvc, referral_code, referred_by, level, kpower, created_at FROM members ORDER BY created_at DESC');
+    res.json(r.rows);
+  } catch(e) { 
+    console.error('Export error:', e);
+    res.status(500).json({error:'Export failed'}); 
+  }
+});
+
 app.get('/api/leaderboard', async (req, res) => {
   try {
     const {state, lga, ward} = req.query;
@@ -225,7 +235,7 @@ app.get('/api/leaderboard', async (req, res) => {
     if (ward) { params.push(ward); where.push(`m.ward=$${params.length}`); }
     
     const whereStr = where.length ? 'WHERE ' + where.join(' AND ') + ' ' : '';
-    const q = 'SELECT m.full_name,m.state,m.lga,m.kpower,m.level,COUNT(r.id) as referrals FROM members m LEFT JOIN members r ON r.referred_by=m.referral_code ' + whereStr + 'GROUP BY m.id ORDER BY referrals DESC LIMIT 20';
+    const q = 'SELECT m.full_name,m.state,m.lga,m.ward,m.kpower,m.level,m.profile_image,COUNT(r.id) as referrals FROM members m LEFT JOIN members r ON r.referred_by=m.referral_code ' + whereStr + 'GROUP BY m.id ORDER BY referrals DESC LIMIT 20';
     
     const result = await pool.query(q, params);
     const rows = result.rows.map(row => {
@@ -235,10 +245,12 @@ app.get('/api/leaderboard', async (req, res) => {
         full_name: row.full_name,
         state: row.state,
         lga: row.lga,
+        ward: row.ward,
         referrals: refs,
         level: lvl.level,
         level_name: lvl.name,
-        kpower: row.kpower + (refs * 50)
+        kpower: row.kpower + (refs * 50),
+        profile_image: row.profile_image
       };
     });
     res.json(rows);
@@ -261,18 +273,6 @@ function auth(req, res, next) {
     req.user = user; next();
   });
 }
-
-app.get('/api/export-members', async (req, res) => {
-  console.log('Export request received');
-  try {
-    const result = await pool.query('SELECT id, full_name, phone, email, state, lga, ward, pvc, referral_code, referred_by, level, kpower, profile_image, created_at FROM members ORDER BY created_at DESC');
-    console.log(`Exporting ${result.rows.length} members`);
-    res.json(result.rows);
-  } catch(e) {
-    console.error('Export error:', e);
-    res.status(500).json({error:'Export failed'});
-  }
-});
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname,'public','index.html')));
 
