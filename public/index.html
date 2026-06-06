@@ -399,16 +399,20 @@ const LEVELS = [
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 window.onload = function() {
-  loadStats();
-  loadStates();
-  loadRkStates();
-  buildLevels();
-  const token = localStorage.getItem('kv_token');
-  if (token) {
-    currentUser = JSON.parse(localStorage.getItem('kv_user') || '{}');
-    renderDashboard(currentUser);
-    showScreen('app');
-    loadDashboard();
+  try { loadStats(); } catch(e) { console.error("loadStats failed", e); }
+  try { loadStates(); } catch(e) { console.error("loadStates failed", e); }
+  try { loadRkStates(); } catch(e) { console.error("loadRkStates failed", e); }
+  try { buildLevels(); } catch(e) { console.error("buildLevels failed", e); }
+  try {
+    const token = localStorage.getItem('kv_token');
+    if (token) {
+      currentUser = JSON.parse(localStorage.getItem('kv_user') || '{}');
+      renderDashboard(currentUser);
+      showScreen('app');
+      loadDashboard();
+    }
+  } catch(e) {
+    console.error("Auth initialization failed", e);
   }
 };
 
