@@ -263,10 +263,13 @@ function auth(req, res, next) {
 }
 
 app.get('/api/export-members', async (req, res) => {
+  console.log('Export request received');
   try {
     const result = await pool.query('SELECT id, full_name, phone, email, state, lga, ward, pvc, referral_code, referred_by, level, kpower, profile_image, created_at FROM members ORDER BY created_at DESC');
+    console.log(`Exporting ${result.rows.length} members`);
     res.json(result.rows);
   } catch(e) {
+    console.error('Export error:', e);
     res.status(500).json({error:'Export failed'});
   }
 });
