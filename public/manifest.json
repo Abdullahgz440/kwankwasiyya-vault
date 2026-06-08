@@ -1,0 +1,21 @@
+{
+  "name": "Kwankwasiyya Vault",
+  "short_name": "Vault",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#D32F2F",
+  "theme_color": "#D32F2F",
+  "description": "Secure access to Kwankwasiyya resources.",
+  "icons": [
+    {
+      "src": "logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
