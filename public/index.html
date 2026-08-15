@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-  <title>Kwankwasiyya Vault</title>
+  <title>Gida Gida Community</title>
   <link rel="icon" href="logo.jpg"/>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#dc2626">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="android-chrome" href="logo.jpg">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root{--red:#D32F2F;--red-dark:#B71C1C;--red-light:#FFCDD2;--gold:#F59E0B;--gold-light:#FEF3C7;--bg:#F5F5F5;--text:#1A1A1A;--muted:#777;--border:#E0E0E0;--card:#fff;--nav:64px}
@@ -144,12 +145,12 @@
 <div id="welcome" class="screen active">
   <div class="w-top">
     <div class="logo"><img src="logo.jpg" alt="KNG Logo"/></div>
-    <div class="w-title">Kwankwasiyya Vault</div>
-    <div class="w-sub">Refer. Rise. Lead. Join the movement and climb the ranks of the Kwankwasiyya network.</div>
+    <div class="w-title">Gida Gida Community</div>
+    <div class="w-sub">Refer. Rise. Lead. Join the movement and climb the ranks of the Gida Gida Community.</div>
     <div class="stats-row">
       <div class="stat-pill"><div class="v" id="stat-members">—</div><div class="l">Members</div></div>
       <div class="stat-pill"><div class="v" id="stat-states">—</div><div class="l">States</div></div>
-      <div class="stat-pill"><div class="v">10</div><div class="l">Levels</div></div>
+      <div class="stat-pill"><div class="v">6</div><div class="l">Recognition Levels</div></div>
     </div>
   </div>
   <div class="w-bottom">
@@ -165,7 +166,7 @@
   <div class="auth-hdr">
     <button class="back-btn" onclick="showScreen('welcome')">←</button>
     <h2>Create Account</h2>
-    <p>Join the Kwankwasiyya network</p>
+    <p>Join the Gida Gida Community</p>
   </div>
   <div class="auth-body">
     <div class="err-msg" id="signup-err"></div>
@@ -177,6 +178,7 @@
       <input type="file" id="r-image" accept="image/*" style="display:none" onchange="previewImage(this, 'signup-av-preview')"/>
     </div>
     <div class="fg"><label>Full Name</label><input type="text" id="r-name" placeholder="Enter your full name"/></div>
+    <div class="fg"><label>Community</label><input type="text" id="r-community" placeholder="Enter your community"/></div>
     <div class="fg"><label>Phone Number</label><input type="tel" id="r-phone" placeholder="+234 800 000 0000"/></div>
     <div class="fg"><label>Email Address <span style="font-weight:400;color:var(--muted)">(Optional)</span></label><input type="email" id="r-email" placeholder="you@email.com"/></div>
 
@@ -259,7 +261,7 @@
       </div>
       <div class="action-row">
         <button class="ac red" onclick="switchTab('invite')"><span class="ai">🤝</span><span class="al">Invite Friends</span></button>
-        <button class="ac" onclick="switchTab('ranks')"><span class="ai">🏆</span><span class="al">Leaderboard</span></button>
+        <button class="ac" onclick="switchTab('ranks')"><span class="ai">🏆</span><span class="al">Community Leaderboard</span></button>
       </div>
       <div class="inv-box">
         <div><h4>Your Referral Code</h4><p>Share and earn K-Power points</p></div>
@@ -308,7 +310,7 @@
 
   <!-- RANKS -->
   <div id="tab-ranks" class="tab-panel" style="display:none">
-    <div class="rk-top"><h2>🏆 Leaderboard</h2><p>Top members nationwide</p></div>
+    <div class="rk-top"><h2>🏆 Community Leaderboard</h2><p>Top members nationwide</p></div>
     <div class="my-rank"><div><h4>Your National Rank</h4><p>Keep inviting to climb higher!</p></div><div class="mrn" id="rk-national">#—</div></div>
     
     <div class="filters-container" style="padding:10px 16px;background:#fff;border-bottom:1px solid var(--border)">
@@ -324,7 +326,7 @@
 
   <!-- LEVELS -->
   <div id="tab-levels" class="tab-panel" style="display:none">
-    <div class="lv-top"><h2>📈 Level System</h2><p>Rise through the ranks of the movement</p></div>
+    <div class="lv-top"><h2>📈 Recognition Levels</h2><p>Rise through the ranks of the movement</p></div>
     <div class="content" style="padding-top:20px;padding-bottom:80px" id="levels-list"></div>
   </div>
 
@@ -349,6 +351,7 @@
       <div class="card" style="margin-bottom:16px">
         <div class="card-title">Member Details</div>
         <div style="font-size:14px;line-height:2">
+          <span style="color:var(--muted)">Community:</span> <strong id="pr-community">—</strong><br/>
           <span style="color:var(--muted)">State:</span> <strong id="pr-state">—</strong><br/>
           <span style="color:var(--muted)">LGA:</span> <strong id="pr-lga">—</strong><br/>
           <span style="color:var(--muted)">Ward:</span> <strong id="pr-ward">—</strong>
@@ -363,13 +366,13 @@
           </div>
           <div style="flex:1">
             <h4 style="margin-bottom:4px;font-size:15px">Comr Abdullahi Ghazali</h4>
-            <p style="font-size:13px;color:var(--muted);line-height:1.5">A Kwankwasiyya Loyalist, Philanthropist, Session Communications Professional and a Banker</p>
+            <p style="font-size:13px;color:var(--muted);line-height:1.5">A Gida Gida Community member, Philanthropist, Session Communications Professional and a Banker</p>
           </div>
         </div>
       </div>
-      <button class="mn-item" onclick="openIdCard()"><div class="mn-ico">🪪</div><div class="mn-txt"><div class="mn-ttl">My ID Card</div><div class="mn-sub">Tap to view your Kwankwasiyya ID</div></div><div class="mn-arr">›</div></button>
+      <button class="mn-item" onclick="openIdCard()"><div class="mn-ico">🪪</div><div class="mn-txt"><div class="mn-ttl">My ID Card</div><div class="mn-sub">Tap to view your Gida Gida Community ID</div></div><div class="mn-arr">›</div></button>
       <button class="mn-item" onclick="switchTab('levels')"><div class="mn-ico">📈</div><div class="mn-txt"><div class="mn-ttl">My Progress</div><div class="mn-sub" id="pr-progress">—</div></div><div class="mn-arr">›</div></button>
-      <button class="mn-item" onclick="switchTab('ranks')"><div class="mn-ico">🏆</div><div class="mn-txt"><div class="mn-ttl">Leaderboard</div><div class="mn-sub">See where you rank</div></div><div class="mn-arr">›</div></button>
+      <button class="mn-item" onclick="switchTab('ranks')"><div class="mn-ico">🏆</div><div class="mn-txt"><div class="mn-ttl">Community Leaderboard</div><div class="mn-sub">See where you rank</div></div><div class="mn-arr">›</div></button>
       <button class="mn-item" onclick="doLogout()" style="margin-top:10px"><div class="mn-ico danger">🚪</div><div class="mn-txt"><div class="mn-ttl danger">Log Out</div><div class="mn-sub">Sign out of your account</div></div><div class="mn-arr">›</div></button>
     </div>
   </div>
@@ -378,7 +381,7 @@
     <button class="nav-btn active" id="nav-home" onclick="switchTab('home')"><span class="ni">🏠</span>Home</button>
     <button class="nav-btn" id="nav-invite" onclick="switchTab('invite')"><span class="ni">🤝</span>Invite</button>
     <button class="nav-btn" id="nav-ranks" onclick="switchTab('ranks')"><span class="ni">📊</span>Ranks</button>
-    <button class="nav-btn" id="nav-levels" onclick="switchTab('levels')"><span class="ni">⭐</span>Levels</button>
+    <button class="nav-btn" id="nav-levels" onclick="switchTab('levels')"><span class="ni">⭐</span>Recognition</button>
     <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')"><span class="ni">👤</span>Profile</button>
   </nav>
 </div>
@@ -390,16 +393,12 @@ const API = '';
 let currentUser = null;
 
 const LEVELS = [
-  {n:'Infant',lvl:1,min:0,max:10,icon:'🌱',bg:'#E0F2FE'},
-  {n:'Beginner',lvl:2,min:10,max:30,icon:'🚀',bg:'#E0F2FE'},
-  {n:'Builder',lvl:3,min:30,max:75,icon:'🏗️',bg:'#D1FAE5'},
-  {n:'Mobilizer',lvl:4,min:75,max:200,icon:'⚡',bg:'#FEF3C7'},
-  {n:'Influencer',lvl:5,min:200,max:350,icon:'📣',bg:'#F3E8FF'},
-  {n:'Coordinator',lvl:6,min:350,max:550,icon:'🎯',bg:'#FEE2E2'},
-  {n:'Strategist',lvl:7,min:550,max:800,icon:'🧠',bg:'#E0F2FE'},
-  {n:'Leader',lvl:8,min:800,max:1200,icon:'🦁',bg:'#FEF3C7'},
-  {n:'Champion',lvl:9,min:1200,max:2000,icon:'🏅',bg:'#FEE2E2'},
-  {n:'Legend',lvl:10,min:2000,max:9999,icon:'👑',bg:'#FEF9C3'}
+  {n:'Community',lvl:1,min:0,max:10,icon:'🤝',bg:'#E0F2FE'},
+  {n:'Ward',lvl:2,min:10,max:30,icon:'🏘️',bg:'#D1FAE5'},
+  {n:'LGA',lvl:3,min:30,max:75,icon:'📍',bg:'#FEF3C7'},
+  {n:'Senatorial District',lvl:4,min:75,max:200,icon:'⭐',bg:'#F3E8FF'},
+  {n:'State',lvl:5,min:200,max:550,icon:'🏛️',bg:'#FEE2E2'},
+  {n:'National',lvl:6,min:550,max:9999,icon:'🇳🇬',bg:'#FEF9C3'}
 ];
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
@@ -524,6 +523,7 @@ async function doSignup() {
   const name = document.getElementById('r-name').value.trim();
   const phone = document.getElementById('r-phone').value.trim();
   const email = document.getElementById('r-email').value.trim();
+  const community = document.getElementById('r-community').value.trim();
   const state = document.getElementById('r-state').value;
   const lga = document.getElementById('r-lga').value;
   const ward = document.getElementById('r-ward').value;
@@ -533,6 +533,7 @@ async function doSignup() {
 
   if (!name) { showErr('signup-err','Please enter your full name'); return; }
   if (!phone) { showErr('signup-err','Please enter your phone number'); return; }
+  if (!community) { showErr('signup-err','Please enter your community'); return; }
   if (!state) { showErr('signup-err','Please select your state'); return; }
   if (!lga) { showErr('signup-err','Please select your LGA'); return; }
   if (!ward) { showErr('signup-err','Please select your ward'); return; }
@@ -546,6 +547,7 @@ async function doSignup() {
   formData.append('full_name', name);
   formData.append('phone', phone);
   formData.append('email', email);
+  formData.append('community', community);
   formData.append('state', state);
   formData.append('lga', lga);
   formData.append('ward', ward);
@@ -565,7 +567,7 @@ async function doSignup() {
     saveSession(data.token, data.member);
     showScreen('app');
     switchTab('home');
-    showToast('Welcome to Kwankwasiyya Vault! 🎉');
+    showToast('Welcome to Gida Gida Community! 🎉');
     loadDashboard();
   } catch(e) {
     showErr('signup-err','Network error. Please check your connection.');
@@ -672,6 +674,7 @@ function renderDashboard(m, activity) {
   document.getElementById('pr-kpower').textContent = (m.kpower||0).toLocaleString();
   document.getElementById('pr-srank').textContent = '#' + (m.state_rank||'—');
   document.getElementById('pr-nrank').textContent = '#' + (m.national_rank||'—');
+  document.getElementById('pr-community').textContent = m.community || '—';
   document.getElementById('pr-state').textContent = m.state || '—';
   document.getElementById('pr-lga').textContent = m.lga || '—';
   document.getElementById('pr-ward').textContent = m.ward || '—';
@@ -698,7 +701,7 @@ async function onRkStateChange() {
   lgaSel.innerHTML = '<option value="">All LGAs</option>';
   wardSel.innerHTML = '<option value="">All Wards</option>';
   wardSel.disabled = true;
-  if (!state) { lgaSel.disabled = true; loadLeaderboard(); return; }
+  if (!state) { lgaSel.disabled = true; loadCommunity Leaderboard(); return; }
   const lgas = await fetch(API + '/api/lgas/' + encodeURIComponent(state)).then(r=>r.json());
   lgas.forEach(l => {
     const o = document.createElement('option');
@@ -706,7 +709,7 @@ async function onRkStateChange() {
     lgaSel.appendChild(o);
   });
   lgaSel.disabled = false;
-  loadLeaderboard();
+  loadCommunity Leaderboard();
 }
 
 async function onRkLGAChange() {
@@ -714,7 +717,7 @@ async function onRkLGAChange() {
   const lga = document.getElementById('rk-lga').value;
   const wardSel = document.getElementById('rk-ward');
   wardSel.innerHTML = '<option value="">All Wards</option>';
-  if (!lga) { wardSel.disabled = true; loadLeaderboard(); return; }
+  if (!lga) { wardSel.disabled = true; loadCommunity Leaderboard(); return; }
   const wards = await fetch(API + '/api/wards/' + encodeURIComponent(state) + '/' + encodeURIComponent(lga)).then(r=>r.json());
   wards.forEach(w => {
     const o = document.createElement('option');
@@ -722,11 +725,11 @@ async function onRkLGAChange() {
     wardSel.appendChild(o);
   });
   wardSel.disabled = false;
-  loadLeaderboard();
+  loadCommunity Leaderboard();
 }
 
 function onRkWardChange() {
-  loadLeaderboard();
+  loadCommunity Leaderboard();
 }
 
 async function loadRkStates() {
@@ -739,7 +742,7 @@ async function loadRkStates() {
   });
 }
 
-async function loadLeaderboard() {
+async function loadCommunity Leaderboard() {
   const state = document.getElementById('rk-state').value;
   const lga = document.getElementById('rk-lga').value;
   const ward = document.getElementById('rk-ward').value;
@@ -812,7 +815,7 @@ function switchTab(tab) {
   document.getElementById('tab-'+tab).style.display='block';
   document.getElementById('nav-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  if (tab==='ranks') loadLeaderboard();
+  if (tab==='ranks') loadCommunity Leaderboard();
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
@@ -824,7 +827,7 @@ function copyCode() {
 
 function shareVia(p) {
   const code = (currentUser && currentUser.referral_code) || '—';
-  const msg = encodeURIComponent('Join Kwankwasiyya Vault with my code ' + code + '! ' + window.location.origin);
+  const msg = encodeURIComponent('Join Gida Gida Community with my code ' + code + '! ' + window.location.origin);
   if (p==='copy') { copyCode(); return; }
   if (p==='whatsapp') window.open('https://wa.me/?text='+msg,'_blank');
   if (p==='sms') window.open('sms:?body='+msg);
@@ -859,11 +862,11 @@ function escHtml(s) {
 
 function openIdCard() {
   const m = currentUser || JSON.parse(localStorage.getItem('kv_user') || '{}');
-  const level = LEVELS.find(l => l.lvl === (m.level || 1)) || {n:'Infant'};
+  const level = LEVELS.find(l => l.lvl === (m.level || 1)) || {n:'Community'};
   const overlay = document.createElement('div');
   overlay.id = 'id-card-modal';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px';
-  overlay.innerHTML = `<div style="max-width:370px;width:100%"><div id="id-card-capture" style="padding:18px;border-radius:22px;background:linear-gradient(180deg,#7f1d1d,#dc2626);color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.18)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><img src="logo.jpg" style="width:40px;height:40px;border-radius:10px;object-fit:cover;background:#fff"/><div><div style="font-size:11px;opacity:.85;font-weight:700">KWANKWASIYYA NEXT GENERATION</div><div style="font-size:18px;font-weight:900">ID CARD</div></div></div><div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><img src="${m.profile_image||'logo.jpg'}" style="width:72px;height:72px;border-radius:18px;object-fit:cover;border:2px solid rgba(255,255,255,.35);background:#fff"/><div style="flex:1"><div style="font-size:22px;font-weight:900;line-height:1.15">${escHtml(m.full_name||'—')}</div><div style="font-size:12px;opacity:.9;margin-top:4px">${escHtml(m.state||'—')} • ${escHtml(m.lga||'—')} • ${escHtml(m.ward||'—')}</div></div></div><div style="background:rgba(255,255,255,.12);border-radius:16px;padding:12px 14px;margin-bottom:12px"><div style="font-size:11px;opacity:.8;margin-bottom:4px">Current Level</div><div style="font-size:20px;font-weight:900">${escHtml(level.n)}</div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" style="flex:1;background:#fff;color:#7f1d1d" onclick="downloadIdCard()">Download</button><button class="btn btn-outline" style="flex:1;border-color:#fff;color:#fff" onclick="shareIdCard()">Share</button></div></div><div style="text-align:center;margin-top:12px"><button class="btn btn-outline" onclick="closeIdCard()" style="background:#fff">Close</button></div></div>`;
+  overlay.innerHTML = `<div style="max-width:370px;width:100%"><div id="id-card-capture" style="padding:18px;border-radius:22px;background:linear-gradient(180deg,#7f1d1d,#dc2626);color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.18)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><img src="logo.jpg" style="width:40px;height:40px;border-radius:10px;object-fit:cover;background:#fff"/><div><div style="font-size:11px;opacity:.85;font-weight:700">GIDA GIDA COMMUNITY</div><div style="font-size:18px;font-weight:900">ID CARD</div></div></div><div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><img src="${m.profile_image||'logo.jpg'}" style="width:72px;height:72px;border-radius:18px;object-fit:cover;border:2px solid rgba(255,255,255,.35);background:#fff"/><div style="flex:1"><div style="font-size:22px;font-weight:900;line-height:1.15">${escHtml(m.full_name||'—')}</div><div style="font-size:12px;opacity:.9;margin-top:4px">${escHtml(m.state||'—')} • ${escHtml(m.lga||'—')} • ${escHtml(m.ward||'—')}</div></div></div><div style="background:rgba(255,255,255,.12);border-radius:16px;padding:12px 14px;margin-bottom:12px"><div style="font-size:11px;opacity:.8;margin-bottom:4px">Current Level</div><div style="font-size:20px;font-weight:900">${escHtml(level.n)}</div></div><div style="display:flex;gap:10px"><button class="btn btn-primary" style="flex:1;background:#fff;color:#7f1d1d" onclick="downloadIdCard()">Download</button><button class="btn btn-outline" style="flex:1;border-color:#fff;color:#fff" onclick="shareIdCard()">Share</button></div></div><div style="text-align:center;margin-top:12px"><button class="btn btn-outline" onclick="closeIdCard()" style="background:#fff">Close</button></div></div>`;
   overlay.onclick = closeIdCard;
   overlay.querySelector('div').onclick = e => e.stopPropagation();
   document.body.appendChild(overlay);
@@ -876,7 +879,7 @@ async function downloadIdCard() {
   try {
     const canvas = await html2canvas(card, { useCORS: true, scale: 2, backgroundColor: null });
     const link = document.createElement('a');
-    link.download = 'Kwankwasiyya-ID-Card.png';
+    link.download = 'Gida-Gida-ID-Card.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
     showToast('ID Card downloaded! ✅');
@@ -892,13 +895,13 @@ async function shareIdCard() {
   try {
     const canvas = await html2canvas(card, { useCORS: true, scale: 2, backgroundColor: null });
     canvas.toBlob(async (blob) => {
-      const file = new File([blob], 'Kwankwasiyya-ID-Card.png', { type: 'image/png' });
+      const file = new File([blob], 'Gida-Gida-ID-Card.png', { type: 'image/png' });
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
             files: [file],
-            title: 'Kwankwasiyya ID Card',
-            text: 'Check out my Kwankwasiyya ID Card!'
+            title: 'Gida Gida Community ID Card',
+            text: 'Check out my Gida Gida Community ID Card!'
           });
         } catch (e) {
           showToast('Share cancelled');
@@ -906,7 +909,7 @@ async function shareIdCard() {
       } else {
         const link = document.createElement('a');
         link.href = canvas.toDataURL('image/png');
-        link.download = 'Kwankwasiyya-ID-Card.png';
+        link.download = 'Gida-Gida-ID-Card.png';
         link.click();
         showToast('Share not supported, downloaded instead');
       }
@@ -930,12 +933,12 @@ function openFounderBio() {
           <img src="founder.jpg" style="width:100%;height:100%;object-fit:cover"/>
         </div>
         <h2 style="font-size:22px;font-weight:900">Comr Abdullahi Ghazali</h2>
-        <p style="font-size:14px;opacity:.9">A Kwankwasiyya Loyalist, Philanthropist, Session Communications Professional and a Banker</p>
+        <p style="font-size:14px;opacity:.9">A Gida Gida Community member, Philanthropist, Session Communications Professional and a Banker</p>
       </div>
       <div style="padding:20px;color:var(--text)">
         <h4 style="margin-bottom:8px;font-size:15px">Full Biography</h4>
         <p style="font-size:13px;line-height:1.6;color:#444;margin-bottom:16px">
-          Abdullahi Ghazali is a dedicated Kwankwasiyya Loyalist and Philanthropist, as well as a seasoned Communications Professional and Banker. He holds an MSc in Communication Studies (Development Communication) and a BSc in Linguistics, both from the prestigious Bayero University Kano. With over 6 years of professional experience in Technology, AI, and Digital Transformation communications, he has served as the Founder & Communications Advisor at ClearLayer and Communications Coordinator at LocalizeHau Language Services Ltd. His work focuses on storytelling, media relations, and corporate communications, bridging the gap between technical innovation and community impact.
+          Abdullahi Ghazali is a dedicated Gida Gida Community member and Philanthropist, as well as a seasoned Communications Professional and Banker. He holds an MSc in Communication Studies (Development Communication) and a BSc in Linguistics, both from the prestigious Bayero University Kano. With over 6 years of professional experience in Technology, AI, and Digital Transformation communications, he has served as the Founder & Communications Advisor at ClearLayer and Communications Coordinator at LocalizeHau Language Services Ltd. His work focuses on storytelling, media relations, and corporate communications, bridging the gap between technical innovation and community impact.
         </p>
         <div style="font-size:14px;line-height:1.8">
           <div style="display:flex;align-items:center;gap:8px">
