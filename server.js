@@ -263,10 +263,10 @@ app.get('/api/leaderboard', async (req, res) => {
 
 app.get('/api/stats', async (req, res) => {
   try {
-    const total = parseInt((await pool.query('SELECT COUNT(*) FROM members')).rows[0].count);
-    const states = parseInt((await pool.query('SELECT COUNT(DISTINCT state) FROM members')).rows[0].count);
-    res.json({total_members:total,states_covered:states});
-  } catch(e) { res.json({total_members:0,states_covered:0}); }
+    // Public campaign counters supplied by the programme team.
+    // Member records remain stored in the private database.
+    res.json({total_members:3424, lgas_covered:44, levels:10});
+  } catch(e) { res.json({total_members:3424,lgas_covered:44,levels:10}); }
 });
 
 function auth(req, res, next) {
