@@ -173,7 +173,7 @@
 
     <div class="sec-label">Personal Information</div>
     <div class="fg" style="display:flex;flex-direction:column;align-items:center;margin-bottom:20px">
-      <div id="signup-av-preview" style="width:80px;height:80px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:10px;overflow:hidden;border:2px solid var(--red-light)">👤</div>
+      <div id="signup-av-preview" style="width:80px;height:80px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:10px;overflow:hidden;border:2px solid var(--red-light)"><img src="gida-gida-logo.png" style="width:100%;height:100%;object-fit:cover" alt="Profile placeholder"/></div>
       <label for="r-image" style="color:var(--red);font-size:13px;font-weight:600;cursor:pointer">Upload Profile Image</label>
       <input type="file" id="r-image" accept="image/*" style="display:none" onchange="previewImage(this, 'signup-av-preview')"/>
     </div>
@@ -692,7 +692,7 @@ function renderDashboard(m, activity) {
   if (activity && activity.length > 0) {
     document.getElementById('d-activity').innerHTML = activity.map(a => {
       const t = timeAgo(new Date(a.time));
-      return '<div class="act-item"><div class="act-av">👤</div><div style="flex:1"><div class="act-name">'+escHtml(a.name)+'</div><div class="act-desc">Joined using your code · +50 K-Power</div></div><div class="act-time">'+t+'</div></div>';
+      return '<div class="act-item"><div class="act-av"><img src="gida-gida-logo.png" alt="Profile placeholder"></div><div style="flex:1"><div class="act-name">'+escHtml(a.name)+'</div><div class="act-desc">Joined using your code · +50 K-Power</div></div><div class="act-time">'+t+'</div></div>';
     }).join('');
   }
 }
@@ -762,7 +762,7 @@ async function loadLeaderboard() {
     document.getElementById('rank-list').innerHTML = data.length === 0
       ? '<div style="text-align:center;padding:30px;color:var(--muted)">No members yet in this region</div>'
       : data.map((r,i) => {
-          return '<div class="rk-item"><div class="rk-pos">'+(i<3?medals[i]:'#'+(i+1))+'</div><div class="rk-av">'+(r.profile_image?'<img src="'+API+r.profile_image+'">':'👤')+'</div><div class="rk-info"><div class="rn">'+escHtml(r.full_name)+'</div><div class="rs">'+escHtml(r.state) + (r.lga?' · '+escHtml(r.lga):'') + (r.ward?' · '+escHtml(r.ward):'') + ' • Level '+r.level+'</div></div><div class="rk-cnt"><div class="rc">'+Number(r.referrals).toLocaleString()+'</div><div class="rl">referrals</div></div></div>';
+          return '<div class="rk-item"><div class="rk-pos">'+(i<3?medals[i]:'#'+(i+1))+'</div><div class="rk-av">'+(r.profile_image?'<img src="'+API+r.profile_image+'">':'<img src="gida-gida-logo.png" alt="Profile placeholder">')+'</div><div class="rk-info"><div class="rn">'+escHtml(r.full_name)+'</div><div class="rs">'+escHtml(r.state) + (r.lga?' · '+escHtml(r.lga):'') + (r.ward?' · '+escHtml(r.ward):'') + ' • Level '+r.level+'</div></div><div class="rk-cnt"><div class="rc">'+Number(r.referrals).toLocaleString()+'</div><div class="rl">referrals</div></div></div>';
         }).join('');
   } catch(e) {
     document.getElementById('rank-list').innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">Failed to load leaderboard</div>';
