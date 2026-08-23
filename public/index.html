@@ -144,7 +144,7 @@
 <!-- WELCOME -->
 <div id="welcome" class="screen active">
   <div class="w-top">
-    <div class="logo"><img src="logo.jpg" alt="KNG Logo"/></div>
+    <div class="logo"><img src="gida-gida-logo.png" alt="Gida Gida Community logo"/></div>
     <div class="w-title">Gida Gida Community</div>
     <div class="w-sub">Refer. Rise. Lead. Join the movement and climb the ranks of the Gida Gida Community.</div>
     <div class="stats-row">
@@ -701,7 +701,7 @@ async function onRkStateChange() {
   lgaSel.innerHTML = '<option value="">All LGAs</option>';
   wardSel.innerHTML = '<option value="">All Wards</option>';
   wardSel.disabled = true;
-  if (!state) { lgaSel.disabled = true; loadCommunity Leaderboard(); return; }
+  if (!state) { lgaSel.disabled = true; loadLeaderboard(); return; }
   const lgas = await fetch(API + '/api/lgas/' + encodeURIComponent(state)).then(r=>r.json());
   lgas.forEach(l => {
     const o = document.createElement('option');
@@ -709,7 +709,7 @@ async function onRkStateChange() {
     lgaSel.appendChild(o);
   });
   lgaSel.disabled = false;
-  loadCommunity Leaderboard();
+  loadLeaderboard();
 }
 
 async function onRkLGAChange() {
@@ -717,7 +717,7 @@ async function onRkLGAChange() {
   const lga = document.getElementById('rk-lga').value;
   const wardSel = document.getElementById('rk-ward');
   wardSel.innerHTML = '<option value="">All Wards</option>';
-  if (!lga) { wardSel.disabled = true; loadCommunity Leaderboard(); return; }
+  if (!lga) { wardSel.disabled = true; loadLeaderboard(); return; }
   const wards = await fetch(API + '/api/wards/' + encodeURIComponent(state) + '/' + encodeURIComponent(lga)).then(r=>r.json());
   wards.forEach(w => {
     const o = document.createElement('option');
@@ -725,11 +725,11 @@ async function onRkLGAChange() {
     wardSel.appendChild(o);
   });
   wardSel.disabled = false;
-  loadCommunity Leaderboard();
+  loadLeaderboard();
 }
 
 function onRkWardChange() {
-  loadCommunity Leaderboard();
+  loadLeaderboard();
 }
 
 async function loadRkStates() {
@@ -742,7 +742,7 @@ async function loadRkStates() {
   });
 }
 
-async function loadCommunity Leaderboard() {
+async function loadLeaderboard() {
   const state = document.getElementById('rk-state').value;
   const lga = document.getElementById('rk-lga').value;
   const ward = document.getElementById('rk-ward').value;
@@ -815,7 +815,7 @@ function switchTab(tab) {
   document.getElementById('tab-'+tab).style.display='block';
   document.getElementById('nav-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  if (tab==='ranks') loadCommunity Leaderboard();
+  if (tab==='ranks') loadLeaderboard();
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
