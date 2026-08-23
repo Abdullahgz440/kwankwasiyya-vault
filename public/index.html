@@ -148,9 +148,9 @@
     <div class="w-title">Gida Gida Community</div>
     <div class="w-sub">Refer. Rise. Lead. Join the movement and climb the ranks of the Gida Gida Community.</div>
     <div class="stats-row">
-      <div class="stat-pill"><div class="v" id="stat-members">—</div><div class="l">Members</div></div>
-      <div class="stat-pill"><div class="v" id="stat-states">—</div><div class="l">States</div></div>
-      <div class="stat-pill"><div class="v">6</div><div class="l">Recognition Levels</div></div>
+      <div class="stat-pill"><div class="v" id="stat-members">3,424</div><div class="l">Members</div></div>
+      <div class="stat-pill"><div class="v" id="stat-lgas">44</div><div class="l">LGAs</div></div>
+      <div class="stat-pill"><div class="v">10</div><div class="l">Recognition Levels</div></div>
     </div>
   </div>
   <div class="w-bottom">
@@ -393,12 +393,16 @@ const API = '';
 let currentUser = null;
 
 const LEVELS = [
-  {n:'Community',lvl:1,min:0,max:10,icon:'🤝',bg:'#E0F2FE'},
-  {n:'Ward',lvl:2,min:10,max:30,icon:'🏘️',bg:'#D1FAE5'},
-  {n:'LGA',lvl:3,min:30,max:75,icon:'📍',bg:'#FEF3C7'},
-  {n:'Senatorial District',lvl:4,min:75,max:200,icon:'⭐',bg:'#F3E8FF'},
-  {n:'State',lvl:5,min:200,max:550,icon:'🏛️',bg:'#FEE2E2'},
-  {n:'National',lvl:6,min:550,max:9999,icon:'🇳🇬',bg:'#FEF9C3'}
+  {n:'Community Member',lvl:1,min:0,max:5,icon:'🤝',bg:'#E0F2FE'},
+  {n:'Community Builder',lvl:2,min:5,max:10,icon:'🏘️',bg:'#D1FAE5'},
+  {n:'Ward Mobilizer',lvl:3,min:10,max:30,icon:'📍',bg:'#FEF3C7'},
+  {n:'Ward Coordinator',lvl:4,min:30,max:75,icon:'⭐',bg:'#F3E8FF'},
+  {n:'LGA Organizer',lvl:5,min:75,max:150,icon:'🏛️',bg:'#FEE2E2'},
+  {n:'LGA Leader',lvl:6,min:150,max:300,icon:'🎯',bg:'#E0F2FE'},
+  {n:'Senatorial Strategist',lvl:7,min:300,max:550,icon:'🧭',bg:'#D1FAE5'},
+  {n:'State Leader',lvl:8,min:550,max:1000,icon:'🌟',bg:'#FEF3C7'},
+  {n:'National Champion',lvl:9,min:1000,max:2000,icon:'🏅',bg:'#F3E8FF'},
+  {n:'National Ambassador',lvl:10,min:2000,max:9999,icon:'🇳🇬',bg:'#FEF9C3'}
 ];
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
@@ -427,10 +431,10 @@ async function loadStats() {
     const d = await r.json();
     const m = d.total_members;
     document.getElementById('stat-members').textContent = m >= 1000 ? (m/1000).toFixed(1)+'K+' : m || '0';
-    document.getElementById('stat-states').textContent = d.states_covered || '0';
+    document.getElementById('stat-lgas').textContent = d.lgas_covered || '44';
   } catch(e) {
     document.getElementById('stat-members').textContent = '0';
-    document.getElementById('stat-states').textContent = '0';
+    document.getElementById('stat-lgas').textContent = '44';
   }
 }
 
