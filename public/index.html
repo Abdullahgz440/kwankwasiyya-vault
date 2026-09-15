@@ -192,6 +192,7 @@ function toggleLanguage(){ translatePage(localStorage.getItem('gida_lang')!=='ha
     <p>Create your account and start building your network today.</p>
     <button class="btn btn-primary" onclick="showScreen('signup')">Create Account</button>
     <button class="btn btn-outline" onclick="showScreen('login')">Log In</button>
+    <button class="btn btn-outline" onclick="location.href='feed.html'">📰 Feed &amp; Tasks</button>
   </div>
 </div>
 
@@ -416,6 +417,8 @@ function toggleLanguage(){ translatePage(localStorage.getItem('gida_lang')!=='ha
     <button class="nav-btn" id="nav-invite" onclick="switchTab('invite')"><span class="ni">🤝</span>Invite</button>
     <button class="nav-btn" id="nav-ranks" onclick="switchTab('ranks')"><span class="ni">📊</span>Ranks</button>
     <button class="nav-btn" id="nav-levels" onclick="switchTab('levels')"><span class="ni">⭐</span>Recognition</button>
+    <button class="nav-btn" onclick="location.href='feed.html'"><span class="ni">📰</span>Feed</button>
+    <button class="nav-btn" onclick="location.href='feed.html#tasks'"><span class="ni">✅</span>Tasks</button>
     <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')"><span class="ni">👤</span>Profile</button>
   </nav>
 </div>
