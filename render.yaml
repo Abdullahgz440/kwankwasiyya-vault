@@ -13,6 +13,9 @@ services:
         fromDatabase:
           name: kwankwasiyya-db
           property: connectionString
+      # Set this secret in Render Dashboard; never commit its value.
+      - key: ADMIN_DASHBOARD_KEY
+        sync: false
 
 databases:
   - name: kwankwasiyya-db
