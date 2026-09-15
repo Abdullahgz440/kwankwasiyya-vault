@@ -71,6 +71,7 @@ app.use((req,res,next) => {
   next();
 });
 app.use(express.static(path.join(__dirname, 'public')));
+app.post('/admin-login', express.urlencoded({extended:false}), (req,res)=>{ const configured=process.env.ADMIN_DASHBOARD_KEY; if(!configured || !req.body || req.body.key!==configured) return res.status(401).send('Invalid admin key.'); res.setHeader('Set-Cookie','gida_admin_session='+encodeURIComponent(configured)+'; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400'); res.redirect('/admin.html?logged_in=1'); });
 
 async function initDB() {
   await pool.query(`
@@ -362,7 +363,7 @@ app.post('/api/admin/redemptions/:id/status', adminAuth, async (req,res) => { co
 
 function adminAuth(req, res, next) {
   const configured = process.env.ADMIN_DASHBOARD_KEY;
-  const supplied = req.headers['x-admin-key'] || req.query.key;
+  const cookies = Object.fromEntries((req.headers.cookie||'').split(';').filter(Boolean).map(x=>{const i=x.indexOf('=');return [x.slice(0,i).trim(),decodeURIComponent(x.slice(i+1))]})); const supplied = req.headers['x-admin-key'] || req.query.key || cookies.gida_admin_session;
   if (!configured || !supplied || supplied !== configured) return res.status(401).json({error:'Admin access required'});
   next();
 }
