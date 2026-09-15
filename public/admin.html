@@ -8,7 +8,8 @@
 </style>
 </head>
 <body>
-<div id="login" class="shell auth card"><div class="brand"><div class="mark">G</div><div><h1>Gida Gida Community</h1><p>Secure administration</p></div></div><h2 style="margin-top:24px">Admin sign in</h2><p class="hint">Use the private admin key configured for this service. It is never stored in this page.</p><div class="field"><label for="key">Admin key</label><input id="key" type="password" autocomplete="current-password" placeholder="Enter ADMIN_DASHBOARD_KEY"></div><button id="open">Open dashboard</button><div id="loginMsg" class="error"></div></div>
+<form id="login" class="shell auth card" method="post" action="/admin-login"><div class="brand"><div class="mark">G</div><div><h1>Gida Gida Community</h1><p>Secure administration</p></div></div><h2 style="margin-top:24px">Admin sign in</h2><p class="hint">Use the private admin key configured for this service. It is never stored in this page.</p><div class="field"><label for="key">Admin key</label><input id="key" type="password" autocomplete="current-password" placeholder="Enter ADMIN_DASHBOARD_KEY"></div><button id="open">Open dashboard</button><div id="loginMsg" class="error"></div></div>
+</form>
 <div id="dashboard" class="shell hide"><header class="top"><div class="brand"><div class="mark">G</div><div><h1>Admin Dashboard</h1><p>Recharge, Community Feed and task review</p></div></div><div class="row"><button class="secondary" id="refresh">Refresh</button><button class="secondary" id="logout">Log out</button></div></header>
 <div id="globalMsg"></div>
 <div class="grid">
