@@ -10,7 +10,41 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="android-chrome" href="gida-gida-logo.png">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+const HAUSA = {
+  'Refer. Rise. Lead. Join the movement and climb the ranks of the Gida Gida Community.':'Yi gayyata. Tashi. Jagoranci. Shiga Gida Gida Community kuma ka samu matsayi.',
+  'Join the Movement':'Shiga Tafiyar', 'Create your account and start building your network today.':'Ƙirƙiri asusunka kuma fara gina hanyar sadarwarka yau.',
+  'Create Account':'Ƙirƙiri Asusun', 'Log In':'Shiga', 'Join the Gida Gida Community':'Shiga Gida Gida Community',
+  'Personal Information':'Bayanin Kai', 'Upload Profile Image':'Loda Hoton Bayani', 'Full Name':'Cikakken Suna',
+  'Community':'Al’umma', 'Phone Number':'Lambar Waya', 'Email Address':'Adireshin Imel', '(Optional)':'(Ba dole ba)',
+  'Location':'Wuri', 'State':'Jiha', 'Local Government Area (LGA)':'Karamar Hukuma (LGA)', 'Ward':'Mazaba',
+  'Voter Verification':'Tabbatar da Katin Zaɓe', 'Voters Card Number (PVC)':'Lambar Katin Zaɓe (PVC)',
+  'Account Setup':'Saitin Asusun', 'Referral Code':'Lambar Gayyata', 'Password':'Kalmar Sirri',
+  'Already have an account?':'Kana da asusu?', "Don't have an account?":"Ba ka da asusu?", 'Welcome Back':'Barka da Dawowa',
+  'Log in to continue':'Shiga don ci gaba', 'Members':'Mambobi', 'LGAs':'Ƙananan Hukumomi', 'Recognition Levels':'Matakan Girmamawa',
+  'Referrals':'Gayya', 'Points':'Maki', 'Your Referral Code':'Lambar Gayyatarka', 'Share and earn Points':'Raba kuma ka samu maki',
+  'Invite & Earn':'Gayyata Ka Samu', 'Share your code and gain Points with every new member':'Raba lambarka ka samu maki da kowane sabon mamba',
+  'Community Leaderboard':'Jerin Jagororin Al’umma', 'Recognition Levels':'Matakan Girmamawa', 'About the Founder':'Game da Wanda ya Kafa',
+  'Member Details':'Bayanin Mamba', 'Recent Activity':'Ayyukan Kwanan Nan', 'My ID Card':'Katin Shaida na', 'My Progress':'Ci Gabana',
+  'Share Via':'Raba Ta Hanyar', 'Your Invite Stats':'Kididdigar Gayyata', 'Total Invites':'Jimillar Gayyata', 'Active':'Masu Aiki',
+  'Current Level':'Matsayin Yanzu', 'National':'Ƙasa baki ɗaya', 'State Rank':'Matsayi a Jiha', 'National Rank':'Matsayi na Ƙasa',
+  'Join the movement':'Shiga tafiyar', 'Hausa':'Turanci', 'English':'Hausa'
+};
+function translatePage(toHausa) {
+  document.documentElement.lang = toHausa ? 'ha' : 'en';
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  let n; while (n=walker.nextNode()) {
+    if (!n.nodeValue.trim()) continue;
+    if (!n.dataset) n.dataset={};
+    if (toHausa) { if (!n.__en) n.__en=n.nodeValue; if (HAUSA[n.__en.trim()]) n.nodeValue=n.nodeValue.replace(n.__en.trim(),HAUSA[n.__en.trim()]); }
+    else if (n.__en) n.nodeValue=n.__en;
+  }
+  document.querySelectorAll('input,select').forEach(el=>{ if(toHausa && el.placeholder){el.dataset.enPlaceholder=el.placeholder; const m={'Enter your full name':'Shigar da cikakken sunanka','Enter your community':'Shigar da al’ummarka','Enter referral code':'Shigar da lambar gayyata','Create a strong password (min 6 chars)':'Ƙirƙiri kalmar sirri mai ƙarfi (aƙalla haruffa 6)'}; if(m[el.placeholder])el.placeholder=m[el.placeholder];} else if(!toHausa&&el.dataset.enPlaceholder)el.placeholder=el.dataset.enPlaceholder; });
+  const b=document.getElementById('lang-toggle'); if(b)b.textContent=toHausa?'English':'Hausa';
+  localStorage.setItem('gida_lang',toHausa?'ha':'en');
+}
+function toggleLanguage(){ translatePage(localStorage.getItem('gida_lang')!=='ha'); }
+</script>
   <style>
     :root{--red:#D32F2F;--red-dark:#B71C1C;--red-light:#FFCDD2;--gold:#F59E0B;--gold-light:#FEF3C7;--bg:#F5F5F5;--text:#1A1A1A;--muted:#777;--border:#E0E0E0;--card:#fff;--nav:64px}
     *{box-sizing:border-box;margin:0;padding:0}
@@ -145,7 +179,7 @@
 <div id="welcome" class="screen active">
   <div class="w-top">
     <div class="logo"><img src="gida-gida-logo.png" alt="Gida Gida Community logo"/></div>
-    <div class="w-title">Gida Gida Community</div>
+    <div style="display:flex;justify-content:center;margin-bottom:8px"><button id="lang-toggle" class="btn btn-outline" style="width:auto;padding:7px 14px;font-size:12px" onclick="toggleLanguage()">Hausa</button></div><div class="w-title">Gida Gida Community</div>
     <div class="w-sub">Refer. Rise. Lead. Join the movement and climb the ranks of the Gida Gida Community.</div>
     <div class="stats-row">
       <div class="stat-pill"><div class="v" id="stat-members">3,424</div><div class="l">Members</div></div>
@@ -249,7 +283,7 @@
     <div class="content">
       <div class="stats-grid">
         <div class="sc"><div class="si">👥</div><div class="sn" id="d-refs">0</div><div class="sl">Referrals</div></div>
-        <div class="sc"><div class="si">⚡</div><div class="sn" id="d-kpower">0</div><div class="sl">K-Power</div></div>
+        <div class="sc"><div class="si">⚡</div><div class="sn" id="d-kpower">0</div><div class="sl">Points</div></div>
         <div class="sc"><div class="si">📍</div><div class="sn" id="d-srank">#—</div><div class="sl">State Rank</div></div>
       </div>
       <div class="card">
@@ -264,7 +298,7 @@
         <button class="ac" onclick="switchTab('ranks')"><span class="ai">🏆</span><span class="al">Community Leaderboard</span></button>
       </div>
       <div class="inv-box">
-        <div><h4>Your Referral Code</h4><p>Share and earn K-Power points</p></div>
+        <div><h4>Your Referral Code</h4><p>Share and earn Points</p></div>
         <div class="code-badge" id="d-ref-code" onclick="copyCode()">—</div>
       </div>
       <div class="card">
@@ -278,7 +312,7 @@
   <div id="tab-invite" class="tab-panel" style="display:none">
     <div class="inv-hero">
       <h2>Invite &amp; Earn</h2>
-      <p>Share your code and gain K-Power with every new member</p>
+      <p>Share your code and gain Points with every new member</p>
       <div class="ref-box">
         <div class="rl">YOUR REFERRAL CODE</div>
         <div class="rc" id="inv-ref-code">—</div>
@@ -287,7 +321,7 @@
     <div class="content">
       <div class="card" style="text-align:center;padding:20px">
         <div style="font-size:32px;margin-bottom:8px">🎯</div>
-        <div style="font-size:18px;font-weight:700;margin-bottom:6px">+50 K-Power per referral</div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:6px">+200 Points per referral</div>
         <div style="font-size:14px;color:var(--muted)">For every person who joins using your code</div>
       </div>
       <div class="card-title">Share Via</div>
@@ -301,7 +335,7 @@
         <div class="card-title">Your Invite Stats</div>
         <div class="inv-stats">
           <div><div class="isn" style="color:var(--red)" id="inv-total">0</div><div class="isl">Total Invites</div></div>
-          <div><div class="isn" style="color:var(--gold)" id="inv-kpower">0</div><div class="isl">K-Power</div></div>
+          <div><div class="isn" style="color:var(--gold)" id="inv-kpower">0</div><div class="isl">Points</div></div>
           <div><div class="isn" style="color:#22C55E" id="inv-active">0</div><div class="isl">Active</div></div>
         </div>
       </div>
@@ -342,7 +376,7 @@
       <p id="pr-sub">—</p>
       <div class="pr-stats">
         <div class="psi"><div class="psn" id="pr-refs">0</div><div class="psl">Referrals</div></div>
-        <div class="psi"><div class="psn" id="pr-kpower">0</div><div class="psl">K-Power</div></div>
+        <div class="psi"><div class="psn" id="pr-kpower">0</div><div class="psl">Points</div></div>
         <div class="psi"><div class="psn" id="pr-srank">#—</div><div class="psl">State</div></div>
         <div class="psi"><div class="psn" id="pr-nrank">#—</div><div class="psl">National</div></div>
       </div>
@@ -407,6 +441,7 @@ const LEVELS = [
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 window.onload = function() {
+  if (localStorage.getItem('gida_lang') === 'ha') setTimeout(()=>translatePage(true), 50);
   try { loadStats(); } catch(e) { console.error("loadStats failed", e); }
   try { loadStates(); } catch(e) { console.error("loadStates failed", e); }
   try { loadRkStates(); } catch(e) { console.error("loadRkStates failed", e); }
@@ -692,7 +727,7 @@ function renderDashboard(m, activity) {
   if (activity && activity.length > 0) {
     document.getElementById('d-activity').innerHTML = activity.map(a => {
       const t = timeAgo(new Date(a.time));
-      return '<div class="act-item"><div class="act-av"><img src="gida-gida-logo.png" alt="Profile placeholder"></div><div style="flex:1"><div class="act-name">'+escHtml(a.name)+'</div><div class="act-desc">Joined using your code · +50 K-Power</div></div><div class="act-time">'+t+'</div></div>';
+      return '<div class="act-item"><div class="act-av"><img src="gida-gida-logo.png" alt="Profile placeholder"></div><div style="flex:1"><div class="act-name">'+escHtml(a.name)+'</div><div class="act-desc">Joined using your code · +200 Points</div></div><div class="act-time">'+t+'</div></div>';
     }).join('');
   }
 }
