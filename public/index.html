@@ -282,32 +282,7 @@ function toggleLanguage(){ translatePage(localStorage.getItem('gida_lang')!=='ha
       <div class="lvl-badge" id="d-badge">⚡ Level 1</div>
     </div>
     <div class="content">
-      <div class="stats-grid">
-        <div class="sc"><div class="si">👥</div><div class="sn" id="d-refs">0</div><div class="sl">Referrals</div></div>
-        <div class="sc"><div class="si">⚡</div><div class="sn" id="d-kpower">0</div><div class="sl">Points</div></div>
-        <div class="sc"><div class="si">📍</div><div class="sn" id="d-srank">#—</div><div class="sl">State Rank</div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Progress to Next Level</div>
-        <div class="prog-hdr"><span id="d-cur-lvl">Level 1</span><span style="color:var(--muted)" id="d-next-lvl">Level 2 →</span></div>
-        <div class="prog-labels"><span id="d-prog-label">0 / 10 referrals</span><span id="d-prog-pct">0%</span></div>
-        <div class="prog-bg"><div class="prog-fill" id="d-prog-bar" style="width:0%"></div></div>
-        <div class="prog-note" id="d-prog-note">Invite friends to level up</div>
-      </div>
-      <div class="action-row">
-        <button class="ac red" onclick="switchTab('invite')"><span class="ai">🤝</span><span class="al">Invite Friends</span></button>
-        <button class="ac" onclick="switchTab('ranks')"><span class="ai">🏆</span><span class="al">Community Leaderboard</span></button>
-      </div>
-      <div class="inv-box">
-        <div><h4>Your Referral Code</h4><p>Share and earn Points</p></div>
-        <div class="code-badge" id="d-ref-code" onclick="copyCode()">—</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Recent Activity</div>
-        <div id="d-activity"><div style="text-align:center;padding:20px;color:var(--muted)">No referrals yet — start inviting!</div></div>
-      </div>
       <div class="card"><div class="card-title">Community Feed</div><div id="home-feed"><div style="text-align:center;padding:16px;color:var(--muted)">Loading posts…</div></div></div>
-      <div class="card"><div class="card-title">Community Tasks</div><div id="home-tasks"><div style="text-align:center;padding:16px;color:var(--muted)">Loading tasks…</div></div></div>
     </div>
   </div>
 
@@ -342,6 +317,7 @@ function toggleLanguage(){ translatePage(localStorage.getItem('gida_lang')!=='ha
           <div><div class="isn" style="color:#22C55E" id="inv-active">0</div><div class="isl">Active</div></div>
         </div>
       </div>
+      <div class="card"><div class="card-title">Community Tasks</div><div id="invite-tasks"><div style="text-align:center;padding:16px;color:var(--muted)">Loading tasks…</div></div></div>
     </div>
   </div>
 
@@ -673,29 +649,15 @@ function renderDashboard(m, activity) {
   }
   document.getElementById('d-badge').textContent = lvl.icon + ' ' + lvl.n + ' · Level ' + m.level;
 
-  // Stats
-  document.getElementById('d-refs').textContent = (m.referrals||0).toLocaleString();
-  document.getElementById('d-kpower').textContent = (m.kpower||0).toLocaleString();
-  document.getElementById('d-srank').textContent = '#' + (m.state_rank||'—');
-
-  // Progress bar
-  const refs = m.referrals || 0;
-  const cur = m.progress_current || 0;
-  const tot = m.progress_total || 10;
-  const pct = Math.min(100, Math.round((cur/tot)*100));
-  document.getElementById('d-cur-lvl').textContent = lvl.icon + ' ' + lvl.n;
-  document.getElementById('d-next-lvl').textContent = nextLvl ? nextLvl.n + ' →' : '🏆 Max Level';
-  document.getElementById('d-prog-label').textContent = cur + ' / ' + tot + ' referrals';
-  document.getElementById('d-prog-pct').textContent = pct + '%';
-  document.getElementById('d-prog-bar').style.width = pct + '%';
-  document.getElementById('d-prog-note').textContent = nextLvl ? (tot-cur) + ' more referrals to reach ' + nextLvl.n : 'You have reached the highest level!';
-
+  // Referral and level data remain available on the Invite and Recognition pages.
   // Referral code
   const code = m.referral_code || '—';
-  document.getElementById('d-ref-code').textContent = code;
+  const cur = m.progress_current || 0;
+  const tot = m.progress_total || 10;
   document.getElementById('inv-ref-code').textContent = code;
 
   // Invite tab stats
+  const refs = m.referrals || 0;
   document.getElementById('inv-total').textContent = refs;
   document.getElementById('inv-kpower').textContent = (m.kpower||0).toLocaleString();
   document.getElementById('inv-active').textContent = refs;
@@ -966,10 +928,14 @@ async function shareIdCard() {
 async function loadHomeCommunity() {
   try {
     const posts = await fetch('/api/feed').then(r=>r.json());
-    document.getElementById('home-feed').innerHTML = posts.length ? posts.slice(0,3).map(p=>'<div style="padding:10px 0;border-bottom:1px solid var(--border)"><b>'+escHtml(p.title)+'</b><p style="margin:5px 0;color:var(--muted);font-size:13px">'+escHtml(p.body)+'</p>'+(p.image_url?'<img src="'+p.image_url+'" style="width:100%;border-radius:10px;max-height:220px;object-fit:cover">':'')+'<button class="btn btn-outline" style="width:auto;padding:7px 12px;margin-top:8px" onclick="shareCommunityPost('+p.id+')">Share</button></div>').join('') : '<div style="text-align:center;padding:16px;color:var(--muted)">No community posts yet.</div>';
+    const el=document.getElementById('home-feed'); if (!el) return;
+    el.innerHTML = posts.length ? posts.slice(0,10).map(p=>'<div style="padding:10px 0;border-bottom:1px solid var(--border)"><b>'+escHtml(p.title)+'</b><p style="margin:5px 0;color:var(--muted);font-size:13px">'+escHtml(p.body)+'</p>'+(p.image_url?'<img src="'+p.image_url+'" style="width:100%;border-radius:10px;max-height:220px;object-fit:cover">':'')+'<button class="btn btn-outline" style="width:auto;padding:7px 12px;margin-top:8px" onclick="shareCommunityPost('+p.id+')">Share</button></div>').join('') : '<div style="text-align:center;padding:16px;color:var(--muted)">No community posts yet.</div>';
+  } catch(e) { console.error('Community feed failed',e); }
+  try {
     const tasks = await fetch('/api/tasks').then(r=>r.json());
-    document.getElementById('home-tasks').innerHTML = tasks.length ? tasks.slice(0,3).map(t=>'<div style="padding:10px 0;border-bottom:1px solid var(--border)"><b>'+escHtml(t.title)+'</b><p style="margin:5px 0;color:var(--muted);font-size:13px">'+escHtml(t.description)+'</p><span style="color:var(--red);font-weight:700">+'+t.points+' Points</span></div>').join('') : '<div style="text-align:center;padding:16px;color:var(--muted)">No tasks available yet.</div>';
-  } catch(e) { console.error('Community content failed',e); }
+    const el=document.getElementById('invite-tasks'); if (!el) return;
+    el.innerHTML = tasks.length ? tasks.slice(0,10).map(t=>'<div style="padding:10px 0;border-bottom:1px solid var(--border)"><b>'+escHtml(t.title)+'</b><p style="margin:5px 0;color:var(--muted);font-size:13px">'+escHtml(t.description)+'</p><span style="color:var(--red);font-weight:700">+'+t.points+' Points</span></div>').join('') : '<div style="text-align:center;padding:16px;color:var(--muted)">No tasks available yet.</div>';
+  } catch(e) { console.error('Community tasks failed',e); }
 }
 async function shareCommunityPost(id) { const url=location.origin+'/feed.html#post-'+id; if(navigator.share) { try { await navigator.share({title:'Gida Gida Community post',url}); } catch(e){} } else { try { await navigator.clipboard.writeText(url); showToast('Post link copied'); } catch(e){} } }
 buildLevels();
