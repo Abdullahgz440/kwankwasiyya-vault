@@ -393,16 +393,16 @@ const API = '';
 let currentUser = null;
 
 const LEVELS = [
-  {n:'Community Member',lvl:1,min:0,max:5,icon:'🤝',bg:'#E0F2FE'},
-  {n:'Community Builder',lvl:2,min:5,max:10,icon:'🏘️',bg:'#D1FAE5'},
-  {n:'Ward Mobilizer',lvl:3,min:10,max:30,icon:'📍',bg:'#FEF3C7'},
-  {n:'Ward Coordinator',lvl:4,min:30,max:75,icon:'⭐',bg:'#F3E8FF'},
-  {n:'LGA Organizer',lvl:5,min:75,max:150,icon:'🏛️',bg:'#FEE2E2'},
-  {n:'LGA Leader',lvl:6,min:150,max:300,icon:'🎯',bg:'#E0F2FE'},
-  {n:'Senatorial Strategist',lvl:7,min:300,max:550,icon:'🧭',bg:'#D1FAE5'},
-  {n:'State Leader',lvl:8,min:550,max:1000,icon:'🌟',bg:'#FEF3C7'},
-  {n:'National Champion',lvl:9,min:1000,max:2000,icon:'🏅',bg:'#F3E8FF'},
-  {n:'National Ambassador',lvl:10,min:2000,max:9999,icon:'🇳🇬',bg:'#FEF9C3'}
+  {n:'Community Member',lvl:1,min:1,max:9,icon:'🤝',bg:'#E0F2FE'},
+  {n:'Community Builder',lvl:2,min:10,max:19,icon:'🏘️',bg:'#D1FAE5'},
+  {n:'Ward Mobilizer',lvl:3,min:20,max:39,icon:'📍',bg:'#FEF3C7'},
+  {n:'Ward Coordinator',lvl:4,min:40,max:59,icon:'⭐',bg:'#F3E8FF'},
+  {n:'LGA Organizer',lvl:5,min:60,max:79,icon:'🏛️',bg:'#FEE2E2'},
+  {n:'LGA Leader',lvl:6,min:80,max:99,icon:'🎯',bg:'#E0F2FE'},
+  {n:'Senatorial Strategist',lvl:7,min:100,max:119,icon:'🧭',bg:'#D1FAE5'},
+  {n:'State Leader',lvl:8,min:120,max:139,icon:'🌟',bg:'#FEF3C7'},
+  {n:'National Champion',lvl:9,min:140,max:159,icon:'🏅',bg:'#F3E8FF'},
+  {n:'National Ambassador',lvl:10,min:160,max:179,icon:'🇳🇬',bg:'#FEF9C3'}
 ];
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
@@ -784,7 +784,7 @@ function buildLevels(currentLevel, refs) {
         ? '<div class="lrn" style="color:var(--gold)">'+(l.min===0?'0+':l.min+'+')+'</div><div class="lrl">referrals</div>'
         : '<div class="lrn" style="color:var(--red)">'+(l.min===0?'0+':l.min+'+')+'</div><div class="lrl">referrals</div>';
     const prog = cur
-      ? '<div class="lv-prog"><div class="prog-bg" style="height:8px"><div class="prog-fill" style="width:'+Math.min(100,Math.round(((refs-l.min)/(l.max-l.min))*100))+'%"></div></div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+refs+' / '+l.max+' referrals</div></div>'
+      ? '<div class="lv-prog"><div class="prog-bg" style="height:8px"><div class="prog-fill" style="width:'+Math.min(100,Math.round(((Math.max(0,refs-l.min+1))/(l.max-l.min+1))*100))+'%"></div></div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+refs+' / '+l.max+' referrals</div></div>'
       : '';
     return '<div class="lv-item '+cls+'">'+tag+'<div class="lv-ico" style="background:'+l.bg+'">'+l.icon+'</div><div class="lv-inf"><div class="lv-name">'+l.n+' <span class="lv-num">· Level '+l.lvl+'</span></div>'+prog+'</div><div class="lv-req">'+req+'</div></div>';
   }).join('');
