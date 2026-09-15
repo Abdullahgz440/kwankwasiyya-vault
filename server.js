@@ -160,7 +160,7 @@ app.post('/api/register', upload.single('profile_image'), async (req, res) => {
       [full_name,phone,email||null,state,lga,ward,community,senatorial_district||null,pvcUp,referral_code,referred_by?referred_by.toUpperCase():null,password_hash,profile_image]
     );
     if (referred_by)
-      await pool.query('UPDATE members SET kpower=kpower+50 WHERE referral_code=$1',[referred_by.toUpperCase()]);
+      await pool.query('UPDATE members SET kpower=kpower+200 WHERE referral_code=$1',[referred_by.toUpperCase()]);
     const m = r.rows[0];
     const token = jwt.sign({id:m.id,referral_code:m.referral_code}, JWT_SECRET, {expiresIn:'30d'});
     res.json({success:true,token,member:{id:m.id,full_name:m.full_name,referral_code:m.referral_code,level:1,level_name:'Infant',kpower:0,state:m.state,lga:m.lga,ward:m.ward,community:m.community,senatorial_district:m.senatorial_district,referrals:0,rank_state:1,rank_national:1,profile_image:m.profile_image}});
@@ -202,7 +202,7 @@ app.get('/api/dashboard', auth, async (req, res) => {
     const natRank = parseInt((await pool.query('SELECT COUNT(*)+1 as r FROM members m2 WHERE (SELECT COUNT(*) FROM members WHERE referred_by=m2.referral_code)>(SELECT COUNT(*) FROM members WHERE referred_by=$1) AND m2.id!=$2',[m.referral_code,m.id])).rows[0].r);
     const activity = (await pool.query('SELECT full_name,created_at FROM members WHERE referred_by=$1 ORDER BY created_at DESC LIMIT 5',[m.referral_code])).rows;
     const lvlNames = ['','Community Member','Community Builder','Ward Mobilizer','Ward Coordinator','LGA Organizer','LGA Leader','Senatorial Strategist','State Leader','National Champion','National Ambassador'];
-    res.json({member:{full_name:m.full_name,referral_code:m.referral_code,state:m.state,lga:m.lga,ward:m.ward,community:m.community,senatorial_district:m.senatorial_district,level:lvl.level,level_name:lvl.name,kpower:m.kpower+(refs*50),referrals:refs,state_rank:stateRank,national_rank:natRank,progress_current:refs-curT,progress_total:nextT-curT,next_level_name:lvlNames[lvl.level+1]||'Legend',profile_image:m.profile_image},activity:activity.map(a=>({name:a.full_name,time:a.created_at}))});
+    res.json({member:{full_name:m.full_name,referral_code:m.referral_code,state:m.state,lga:m.lga,ward:m.ward,community:m.community,senatorial_district:m.senatorial_district,level:lvl.level,level_name:lvl.name,kpower:m.kpower+(refs*200),referrals:refs,state_rank:stateRank,national_rank:natRank,progress_current:refs-curT,progress_total:nextT-curT,next_level_name:lvlNames[lvl.level+1]||'Legend',profile_image:m.profile_image},activity:activity.map(a=>({name:a.full_name,time:a.created_at}))});
   } catch(e) { res.status(500).json({error:'Dashboard failed.'}); }
 });
 
@@ -253,7 +253,7 @@ app.get('/api/leaderboard', async (req, res) => {
         referrals: refs,
         level: lvl.level,
         level_name: lvl.name,
-        kpower: row.kpower + (refs * 50),
+        kpower: row.kpower + (refs * 200),
         profile_image: row.profile_image
       };
     });
