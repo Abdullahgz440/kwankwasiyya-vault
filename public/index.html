@@ -192,7 +192,6 @@ function toggleLanguage(){ translatePage(localStorage.getItem('gida_lang')!=='ha
     <p>Create your account and start building your network today.</p>
     <button class="btn btn-primary" onclick="showScreen('signup')">Create Account</button>
     <button class="btn btn-outline" onclick="showScreen('login')">Log In</button>
-    <button class="btn btn-outline" onclick="location.href='feed.html'">📰 Feed &amp; Tasks</button>
   </div>
 </div>
 
@@ -306,6 +305,8 @@ function toggleLanguage(){ translatePage(localStorage.getItem('gida_lang')!=='ha
         <div class="card-title">Recent Activity</div>
         <div id="d-activity"><div style="text-align:center;padding:20px;color:var(--muted)">No referrals yet — start inviting!</div></div>
       </div>
+      <div class="card"><div class="card-title">Community Feed</div><div id="home-feed"><div style="text-align:center;padding:16px;color:var(--muted)">Loading posts…</div></div></div>
+      <div class="card"><div class="card-title">Community Tasks</div><div id="home-tasks"><div style="text-align:center;padding:16px;color:var(--muted)">Loading tasks…</div></div></div>
     </div>
   </div>
 
@@ -417,8 +418,6 @@ function toggleLanguage(){ translatePage(localStorage.getItem('gida_lang')!=='ha
     <button class="nav-btn" id="nav-invite" onclick="switchTab('invite')"><span class="ni">🤝</span>Invite</button>
     <button class="nav-btn" id="nav-ranks" onclick="switchTab('ranks')"><span class="ni">📊</span>Ranks</button>
     <button class="nav-btn" id="nav-levels" onclick="switchTab('levels')"><span class="ni">⭐</span>Recognition</button>
-    <button class="nav-btn" onclick="location.href='feed.html'"><span class="ni">📰</span>Feed</button>
-    <button class="nav-btn" onclick="location.href='feed.html#tasks'"><span class="ni">✅</span>Tasks</button>
     <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')"><span class="ni">👤</span>Profile</button>
   </nav>
 </div>
@@ -654,6 +653,7 @@ async function loadDashboard() {
     currentUser = {...currentUser, ...data.member};
     localStorage.setItem('kv_user', JSON.stringify(currentUser));
     renderDashboard(data.member, data.activity);
+    loadHomeCommunity();
   } catch(e) { console.error('Dashboard load failed:', e); }
 }
 
@@ -962,6 +962,15 @@ async function shareIdCard() {
   }
 }
 
+async function loadHomeCommunity() {
+  try {
+    const posts = await fetch('/api/feed').then(r=>r.json());
+    document.getElementById('home-feed').innerHTML = posts.length ? posts.slice(0,3).map(p=>'<div style="padding:10px 0;border-bottom:1px solid var(--border)"><b>'+escHtml(p.title)+'</b><p style="margin:5px 0;color:var(--muted);font-size:13px">'+escHtml(p.body)+'</p>'+(p.image_url?'<img src="'+p.image_url+'" style="width:100%;border-radius:10px;max-height:220px;object-fit:cover">':'')+'<button class="btn btn-outline" style="width:auto;padding:7px 12px;margin-top:8px" onclick="shareCommunityPost('+p.id+')">Share</button></div>').join('') : '<div style="text-align:center;padding:16px;color:var(--muted)">No community posts yet.</div>';
+    const tasks = await fetch('/api/tasks').then(r=>r.json());
+    document.getElementById('home-tasks').innerHTML = tasks.length ? tasks.slice(0,3).map(t=>'<div style="padding:10px 0;border-bottom:1px solid var(--border)"><b>'+escHtml(t.title)+'</b><p style="margin:5px 0;color:var(--muted);font-size:13px">'+escHtml(t.description)+'</p><span style="color:var(--red);font-weight:700">+'+t.points+' Points</span></div>').join('') : '<div style="text-align:center;padding:16px;color:var(--muted)">No tasks available yet.</div>';
+  } catch(e) { console.error('Community content failed',e); }
+}
+async function shareCommunityPost(id) { const url=location.origin+'/feed.html#post-'+id; if(navigator.share) { try { await navigator.share({title:'Gida Gida Community post',url}); } catch(e){} } else { try { await navigator.clipboard.writeText(url); showToast('Post link copied'); } catch(e){} } }
 buildLevels();
 
 function openFounderBio() {
