@@ -312,6 +312,22 @@ app.get('/api/leaderboard', async (req, res) => {
   } catch(e) { res.status(500).json({error:'Leaderboard failed.'}); }
 });
 
+function adminAuth(req, res, next) {
+  const configured = process.env.ADMIN_DASHBOARD_KEY;
+  const supplied = req.headers['x-admin-key'] || req.query.key;
+  if (!configured || !supplied || supplied !== configured) return res.status(401).json({error:'Admin access required'});
+  next();
+}
+function mask(value) { if (!value) return ''; const x=String(value); return x.length<=4?'••••':x.slice(0,2)+'••••'+x.slice(-2); }
+app.get('/api/admin/security', adminAuth, async (req, res) => {
+  try {
+    const summary = (await pool.query(`SELECT event_type, COUNT(*)::int AS count FROM security_events WHERE created_at > NOW() - INTERVAL '30 days' GROUP BY event_type ORDER BY count DESC`)).rows;
+    const events = (await pool.query(`SELECT event_type,ip_address,phone,pvc,referral_code,details,created_at FROM security_events ORDER BY created_at DESC LIMIT 100`)).rows.map(x => ({...x,phone:mask(x.phone),pvc:mask(x.pvc),ip_address:mask(x.ip_address)}));
+    const totals = (await pool.query(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '24 hours')::int AS today FROM security_events`)).rows[0];
+    res.json({summary,events,totals});
+  } catch(e) { res.status(500).json({error:'Security dashboard unavailable'}); }
+});
+
 app.get('/api/stats', async (req, res) => {
   try {
     // Public campaign counters supplied by the programme team.
