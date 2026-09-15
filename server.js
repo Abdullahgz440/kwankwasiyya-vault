@@ -61,6 +61,15 @@ const pool = new Pool({
 
 app.use(cors());
 app.use(express.json());
+app.use((req,res,next) => {
+  if (req.path === '/' || req.path === '/index.html') {
+    const fs = require('fs');
+    let page = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
+    page = page.replace('</body>', '<script src="/redemptions.js"></script></body>');
+    return res.type('html').send(page);
+  }
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 async function initDB() {
@@ -100,6 +109,8 @@ async function initDB() {
   await pool.query(`CREATE TABLE IF NOT EXISTS community_posts (id SERIAL PRIMARY KEY,title VARCHAR(240) NOT NULL,body TEXT NOT NULL,image_url VARCHAR(255),published BOOLEAN DEFAULT TRUE,created_at TIMESTAMP DEFAULT NOW());`);
   await pool.query(`CREATE TABLE IF NOT EXISTS community_tasks (id SERIAL PRIMARY KEY,title VARCHAR(240) NOT NULL,description TEXT NOT NULL,platform VARCHAR(30) NOT NULL,target_url TEXT NOT NULL,points INT DEFAULT 200,active BOOLEAN DEFAULT TRUE,created_at TIMESTAMP DEFAULT NOW());`);
   await pool.query(`CREATE TABLE IF NOT EXISTS task_submissions (id SERIAL PRIMARY KEY,task_id INT REFERENCES community_tasks(id),member_id INT REFERENCES members(id),proof_url TEXT,status VARCHAR(20) DEFAULT 'pending',points_awarded INT DEFAULT 0,created_at TIMESTAMP DEFAULT NOW(),reviewed_at TIMESTAMP,UNIQUE(task_id,member_id));`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS redemptions (id SERIAL PRIMARY KEY, member_id INT REFERENCES members(id) NOT NULL, reward_type VARCHAR(10) NOT NULL CHECK (reward_type IN ('airtime','data')), network VARCHAR(20) NOT NULL CHECK (network IN ('MTN','Airtel','Glo','9mobile')), phone VARCHAR(30) NOT NULL, amount_naira INT NOT NULL CHECK (amount_naira >= 50 AND amount_naira <= 5000), points_debited INT NOT NULL CHECK (points_debited > 0), status VARCHAR(20) NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending','Approved','Fulfilled','Rejected')), created_at TIMESTAMP DEFAULT NOW(), reviewed_at TIMESTAMP, fulfilled_at TIMESTAMP);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS redemptions_member_created ON redemptions(member_id, created_at DESC);`);
 
   // Ensure uploads directory exists
   const fs = require('fs');
@@ -314,6 +325,40 @@ app.get('/api/leaderboard', async (req, res) => {
     res.json(rows);
   } catch(e) { res.status(500).json({error:'Leaderboard failed.'}); }
 });
+
+
+const REDEEM_RATE = 2; // 200 Points = ₦100
+const REDEEM_NETWORKS = ['MTN','Airtel','Glo','9mobile'];
+function redemptionBalance(memberPoints, reserved) { return Math.max(0, Number(memberPoints || 0) - Number(reserved || 0)); }
+app.get('/api/redemptions', auth, async (req, res) => {
+  try {
+    const m = (await pool.query('SELECT kpower, (SELECT COUNT(*) FROM members r WHERE r.referred_by=members.referral_code)::int AS referrals FROM members WHERE id=$1',[req.user.id])).rows[0];
+    if (!m) return res.status(404).json({error:'Member not found'});
+    const reserved = (await pool.query("SELECT COALESCE(SUM(points_debited),0)::int AS points FROM redemptions WHERE member_id=$1 AND status <> 'Rejected'",[req.user.id])).rows[0].points;
+    const rows = (await pool.query("SELECT id,reward_type,network,RIGHT(phone,4) AS phone_last4,amount_naira,points_debited,status,created_at,reviewed_at,fulfilled_at FROM redemptions WHERE member_id=$1 ORDER BY created_at DESC LIMIT 50",[req.user.id])).rows;
+    res.json({balance:redemptionBalance(Number(m.kpower)+m.referrals*200,reserved), rate:'200 Points = ₦100', redemptions:rows});
+  } catch(e) { console.error('Redemption history error:',e); res.status(500).json({error:'Redemption history unavailable'}); }
+});
+app.post('/api/redemptions', auth, async (req, res) => {
+  const type=String(req.body.reward_type||'').toLowerCase(), network=String(req.body.network||''), phone=String(req.body.phone||'').replace(/[\s-]/g,'');
+  const amount=Number(req.body.amount_naira);
+  if (!['airtime','data'].includes(type)) return res.status(400).json({error:'Choose Airtime or Data'});
+  if (!REDEEM_NETWORKS.includes(network)) return res.status(400).json({error:'Choose a supported network'});
+  if (!/^0\d{10}$/.test(phone) && !/^234\d{10}$/.test(phone)) return res.status(400).json({error:'Enter a valid Nigerian phone number'});
+  if (!Number.isInteger(amount) || amount<50 || amount>5000 || amount%50!==0) return res.status(400).json({error:'Amount must be a whole ₦50 increment between ₦50 and ₦5,000'});
+  const points=amount*REDEEM_RATE, c=await pool.connect();
+  try { await c.query('BEGIN');
+    const m=(await c.query('SELECT kpower, (SELECT COUNT(*) FROM members r WHERE r.referred_by=members.referral_code)::int AS referrals FROM members WHERE id=$1 FOR UPDATE',[req.user.id])).rows[0];
+    if (!m) { await c.query('ROLLBACK'); return res.status(404).json({error:'Member not found'}); }
+    const reserved=(await c.query("SELECT COALESCE(SUM(points_debited),0)::int AS points FROM redemptions WHERE member_id=$1 AND status <> 'Rejected'",[req.user.id])).rows[0].points;
+    const balance=redemptionBalance(Number(m.kpower)+m.referrals*200,reserved);
+    if (points>balance) { await c.query('ROLLBACK'); return res.status(400).json({error:`Insufficient Points. You need ${points.toLocaleString()} Points; available balance is ${balance.toLocaleString()}.`}); }
+    const r=await c.query('INSERT INTO redemptions (member_id,reward_type,network,phone,amount_naira,points_debited) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id,reward_type,network,RIGHT(phone,4) AS phone_last4,amount_naira,points_debited,status,created_at',[req.user.id,type,network,phone,amount,points]);
+    await c.query('COMMIT'); res.status(201).json({success:true,redemption:r.rows[0],balance:balance-points,message:'Request submitted for admin review. No airtime or data has been delivered.'});
+  } catch(e) { await c.query('ROLLBACK'); console.error('Redemption submit error:',e); res.status(500).json({error:'Could not submit redemption request'}); } finally { c.release(); }
+});
+app.get('/api/admin/redemptions', adminAuth, async (req,res) => { try { const r=await pool.query("SELECT r.id,r.reward_type,r.network,RIGHT(r.phone,4) AS phone_last4,r.amount_naira,r.points_debited,r.status,r.created_at,r.reviewed_at,r.fulfilled_at,m.full_name,m.id AS member_id FROM redemptions r JOIN members m ON m.id=r.member_id ORDER BY r.created_at DESC LIMIT 200"); res.json(r.rows); } catch(e){res.status(500).json({error:'Redemptions unavailable'});} });
+app.post('/api/admin/redemptions/:id/status', adminAuth, async (req,res) => { const status=String(req.body.status||''); if(!['Approved','Fulfilled','Rejected'].includes(status)) return res.status(400).json({error:'Invalid status'}); const c=await pool.connect(); try { await c.query('BEGIN'); const r=await c.query('SELECT member_id,status,points_debited FROM redemptions WHERE id=$1 FOR UPDATE',[req.params.id]); if(!r.rows.length){await c.query('ROLLBACK');return res.status(404).json({error:'Redemption not found'});} const x=r.rows[0]; if((status==='Approved' && x.status!=='Pending') || (status==='Fulfilled' && x.status!=='Approved') || (status==='Rejected' && !['Pending','Approved'].includes(x.status))){await c.query('ROLLBACK');return res.status(409).json({error:'Invalid status transition'});} await c.query("UPDATE redemptions SET status=$1, reviewed_at=CASE WHEN $1 IN ('Approved','Rejected') THEN NOW() ELSE reviewed_at END, fulfilled_at=CASE WHEN $1='Fulfilled' THEN NOW() ELSE fulfilled_at END WHERE id=$2",[status,req.params.id]); if(status==='Rejected' && x.status!=='Rejected') await c.query('UPDATE members SET kpower=kpower+$1 WHERE id=$2',[x.points_debited,x.member_id]); await c.query('COMMIT'); res.json({success:true,status}); } catch(e){await c.query('ROLLBACK');res.status(500).json({error:'Status update failed'});} finally{c.release();} });
 
 function adminAuth(req, res, next) {
   const configured = process.env.ADMIN_DASHBOARD_KEY;
