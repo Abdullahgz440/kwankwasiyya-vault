@@ -90,6 +90,13 @@ async function initDB() {
   await pool.query(`ALTER TABLE members ADD COLUMN IF NOT EXISTS profile_image VARCHAR(255);`);
   await pool.query(`ALTER TABLE members ADD COLUMN IF NOT EXISTS level INT DEFAULT 1;`);
   await pool.query(`ALTER TABLE members ADD COLUMN IF NOT EXISTS kpower INT DEFAULT 0;`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS security_events (
+    id SERIAL PRIMARY KEY, event_type VARCHAR(80) NOT NULL, ip_address VARCHAR(120),
+    phone VARCHAR(30), pvc VARCHAR(100), referral_code VARCHAR(20), details TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+  );`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS security_events_ip_time ON security_events(ip_address, created_at);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS security_events_ref_time ON security_events(referral_code, created_at);`);
 
   // Ensure uploads directory exists
   const fs = require('fs');
@@ -98,6 +105,20 @@ async function initDB() {
     fs.mkdirSync(dir, { recursive: true });
   }
   console.log('Database ready');
+}
+
+
+function requestIp(req) {
+  return String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim().slice(0,120);
+}
+async function securityEvent(type, req, data={}) {
+  try { await pool.query('INSERT INTO security_events (event_type,ip_address,phone,pvc,referral_code,details) VALUES ($1,$2,$3,$4,$5,$6)', [type,requestIp(req),data.phone||null,data.pvc||null,data.referral_code||null,JSON.stringify(data)]); } catch(e) { console.error('Security log error:', e.message); }
+}
+async function recentCount(column, value, hours) {
+  const allowed = ['ip_address','phone','pvc','referral_code'];
+  if (!allowed.includes(column) || !value) return 0;
+  const r = await pool.query(`SELECT COUNT(*)::int AS count FROM security_events WHERE ${column}=$1 AND created_at > NOW() - ($2 * INTERVAL '1 hour')`, [value,hours]);
+  return r.rows[0].count;
 }
 
 function generateCode(name) {
@@ -142,25 +163,55 @@ app.post('/api/register', upload.single('profile_image'), async (req, res) => {
       return res.status(400).json({error:'All required fields must be filled'});
     if (password.length < 6)
       return res.status(400).json({error:'Password must be at least 6 characters'});
-    const pvcUp = pvc.toUpperCase();
-    if ((await pool.query('SELECT id FROM members WHERE pvc=$1',[pvcUp])).rows.length)
-      return res.status(400).json({error:'This Voters Card number is already registered'});
-    if ((await pool.query('SELECT id FROM members WHERE phone=$1',[phone])).rows.length)
-      return res.status(400).json({error:'This phone number is already registered'});
-    if (referred_by) {
-      if (!(await pool.query('SELECT id FROM members WHERE referral_code=$1',[referred_by.toUpperCase()])).rows.length)
-        return res.status(400).json({error:'Invalid referral code'});
+    const ip = requestIp(req);
+    const pvcUp = String(pvc).trim().toUpperCase();
+    const phoneNorm = String(phone).trim();
+    const refCode = referred_by ? String(referred_by).trim().toUpperCase() : null;
+    const suspiciousSignals = [];
+    if (await recentCount('ip_address', ip, 1) >= 10) {
+      await securityEvent('registration_rate_limit', req, {phone:phoneNorm,pvc:pvcUp,referral_code:refCode});
+      return res.status(429).json({error:'Too many registration attempts. Please try again later.'});
     }
+    if ((await pool.query('SELECT id FROM members WHERE pvc=$1',[pvcUp])).rows.length) {
+      await securityEvent('duplicate_pvc', req, {phone:phoneNorm,pvc:pvcUp,referral_code:refCode});
+      return res.status(400).json({error:'This Voters Card number is already registered'});
+    }
+    if ((await pool.query('SELECT id FROM members WHERE phone=$1',[phoneNorm])).rows.length) {
+      await securityEvent('duplicate_phone', req, {phone:phoneNorm,pvc:pvcUp,referral_code:refCode});
+      return res.status(400).json({error:'This phone number is already registered'});
+    }
+    if (email && (await pool.query('SELECT id FROM members WHERE LOWER(email)=LOWER($1)',[String(email).trim()])).rows.length)
+      suspiciousSignals.push('duplicate_email');
+    if (refCode) {
+      const referrer = (await pool.query('SELECT id,phone FROM members WHERE referral_code=$1',[refCode])).rows[0];
+      if (!referrer) {
+        await securityEvent('invalid_referral', req, {phone:phoneNorm,pvc:pvcUp,referral_code:refCode});
+        return res.status(400).json({error:'Invalid referral code'});
+      }
+      if (referrer.phone === phoneNorm) {
+        await securityEvent('self_referral', req, {phone:phoneNorm,pvc:pvcUp,referral_code:refCode});
+        return res.status(400).json({error:'You cannot use your own referral code'});
+      }
+      if (await recentCount('referral_code', refCode, 24) >= 20) suspiciousSignals.push('referral_velocity');
+    }
+    // Validate that submitted location values match the official Nigerian data loaded by the app.
+    if (NIGERIA[state] && (!NIGERIA[state][lga] || !NIGERIA[state][lga].includes(ward))) {
+      await securityEvent('invalid_location', req, {phone:phoneNorm,pvc:pvcUp,referral_code:refCode,state,lga,ward});
+      return res.status(400).json({error:'Please select a valid State, LGA and Ward'});
+    }
+    if (suspiciousSignals.length) await securityEvent('suspicious_registration', req, {phone:phoneNorm,pvc:pvcUp,referral_code:refCode,signals:suspiciousSignals});
+    await securityEvent('registration_attempt', req, {phone:phoneNorm,pvc:pvcUp,referral_code:refCode});
+    const referred_by_clean = refCode;
     const password_hash = await bcrypt.hash(password, 10);
     let referral_code = generateCode(full_name);
     while ((await pool.query('SELECT id FROM members WHERE referral_code=$1',[referral_code])).rows.length)
       referral_code = generateCode(full_name);
     const r = await pool.query(
       'INSERT INTO members (full_name,phone,email,state,lga,ward,community,senatorial_district,pvc,referral_code,referred_by,password_hash,profile_image) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id,full_name,referral_code,state,lga,ward,profile_image',
-      [full_name,phone,email||null,state,lga,ward,community,senatorial_district||null,pvcUp,referral_code,referred_by?referred_by.toUpperCase():null,password_hash,profile_image]
+      [full_name,phoneNorm,email?String(email).trim():null,state,lga,ward,community,senatorial_district||null,pvcUp,referral_code,referred_by_clean,password_hash,profile_image]
     );
-    if (referred_by)
-      await pool.query('UPDATE members SET kpower=kpower+200 WHERE referral_code=$1',[referred_by.toUpperCase()]);
+    if (referred_by_clean)
+      await pool.query('UPDATE members SET kpower=kpower+200 WHERE referral_code=$1',[referred_by_clean]);
     const m = r.rows[0];
     const token = jwt.sign({id:m.id,referral_code:m.referral_code}, JWT_SECRET, {expiresIn:'30d'});
     res.json({success:true,token,member:{id:m.id,full_name:m.full_name,referral_code:m.referral_code,level:1,level_name:'Infant',kpower:0,state:m.state,lga:m.lga,ward:m.ward,community:m.community,senatorial_district:m.senatorial_district,referrals:0,rank_state:1,rank_national:1,profile_image:m.profile_image}});
