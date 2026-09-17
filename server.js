@@ -142,15 +142,15 @@ function generateCode(name) {
 }
 
 function getLevel(refs) {
-  if (refs >= 160) return {level:10,name:'National Ambassador'};
-  if (refs >= 140) return {level:9,name:'National Champion'};
-  if (refs >= 120) return {level:8,name:'State Leader'};
-  if (refs >= 100) return {level:7,name:'Senatorial Strategist'};
-  if (refs >= 80) return {level:6,name:'LGA Leader'};
-  if (refs >= 60) return {level:5,name:'LGA Organizer'};
-  if (refs >= 40) return {level:4,name:'Ward Coordinator'};
-  if (refs >= 20) return {level:3,name:'Ward Mobilizer'};
-  if (refs >= 10) return {level:2,name:'Community Builder'};
+  if (refs >= 2000) return {level:10,name:'National Ambassador'};
+  if (refs >= 1500) return {level:9,name:'National Champion'};
+  if (refs >= 900) return {level:8,name:'State Leader'};
+  if (refs >= 600) return {level:7,name:'Senatorial Strategist'};
+  if (refs >= 400) return {level:6,name:'LGA Leader'};
+  if (refs >= 200) return {level:5,name:'LGA Organizer'};
+  if (refs >= 100) return {level:4,name:'Ward Coordinator'};
+  if (refs >= 50) return {level:3,name:'Ward Mobilizer'};
+  if (refs >= 20) return {level:2,name:'Community Builder'};
   return {level:1,name:'Community Member'};
 }
 
@@ -229,7 +229,7 @@ app.post('/api/register', upload.single('profile_image'), async (req, res) => {
       await pool.query('UPDATE members SET kpower=kpower+200 WHERE referral_code=$1',[referred_by_clean]);
     const m = r.rows[0];
     const token = jwt.sign({id:m.id,referral_code:m.referral_code}, JWT_SECRET, {expiresIn:'30d'});
-    res.json({success:true,token,member:{id:m.id,full_name:m.full_name,referral_code:m.referral_code,level:1,level_name:'Infant',kpower:0,state:m.state,lga:m.lga,ward:m.ward,community:m.community,senatorial_district:m.senatorial_district,referrals:0,rank_state:1,rank_national:1,profile_image:m.profile_image}});
+    res.json({success:true,token,member:{id:m.id,full_name:m.full_name,referral_code:m.referral_code,level:1,level_name:'Community Member',kpower:0,state:m.state,lga:m.lga,ward:m.ward,community:m.community,senatorial_district:m.senatorial_district,referrals:0,rank_state:1,rank_national:1,profile_image:m.profile_image}});
   } catch(e) {
     console.error('Register error:', e);
     res.status(500).json({error:'Registration failed. Please try again.'});
@@ -261,7 +261,7 @@ app.get('/api/dashboard', auth, async (req, res) => {
     const m = r.rows[0];
     const refs = parseInt((await pool.query('SELECT COUNT(*) FROM members WHERE referred_by=$1',[m.referral_code])).rows[0].count);
     const lvl = getLevel(refs);
-    const thresholds = [0,10,20,40,60,80,100,120,140,160,180];
+    const thresholds = [0,20,50,100,200,400,600,900,1500,2000,2001];
     const curT = thresholds[lvl.level-1];
     const nextT = thresholds[lvl.level];
     const stateRank = parseInt((await pool.query('SELECT COUNT(*)+1 as r FROM members m2 WHERE m2.state=$1 AND (SELECT COUNT(*) FROM members WHERE referred_by=m2.referral_code)>(SELECT COUNT(*) FROM members WHERE referred_by=$2) AND m2.id!=$3',[m.state,m.referral_code,m.id])).rows[0].r);
